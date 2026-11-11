@@ -1,0 +1,21 @@
+name: Package and documentation
+on:
+  push:
+    branches: [main]
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  check:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+      - name: Install package and documentation dependencies
+        run: python -m pip install . -r docs/user/requirements.txt
+      - name: Exercise installed package and reusable reference
+        run: python -I docs/user/examples/quickstart.py --out "$RUNNER_TEMP/bremap-quickstart"
+      - name: Build documentation with warnings treated as errors
+        run: python -m sphinx -W --keep-going -b html docs/user outputs/documentation/html

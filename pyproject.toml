@@ -1,0 +1,29 @@
+[build-system]
+requires = ["setuptools>=77", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "bremap"
+version = "0.4.0"
+description = "Configurable reference mapping with gene programs and reusable frozen representations"
+readme = "docs/user/README.md"
+license = "MIT"
+license-files = ["LICENSE"]
+requires-python = ">=3.10"
+dependencies = ["numpy>=1.24", "scipy>=1.10", "pandas>=2.0", "scikit-learn>=1.3", "anndata>=0.10,<0.13"]
+
+[project.urls]
+Source = "https://github.com/TK13-lab/BreMAP"
+Issues = "https://github.com/TK13-lab/BreMAP/issues"
+
+[project.scripts]
+bremap = "bremap.commands:console_main"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+bremap = ["resources/*.json"]

@@ -1,0 +1,16 @@
+{
+  "policy_id": "normal_donor_v1",
+  "version": 1,
+  "transfer_beta_grid": [0.25, 0.5, 0.75],
+  "transfer_temperature_grid": [0.05, 0.1, 0.25, 0.5, 1.0],
+  "entropy_grid": [0.05, 0.1],
+  "marginal_penalty_grid": [0.05, 0.2],
+  "reject_prior": 0.1,
+  "known_acceptance": 0.95,
+  "reject_cost_known_quantile": 0.95,
+  "selection": "cell_macro_f1_then_negative_cell_brier_then_lower_beta;transport_lower_penalty_then_lower_entropy",
+  "temperature_tie": "first_in_ascending_grid",
+  "quantile": "equal_donor_mass_inverse_empirical_cdf_stable_sort_tolerance_1e-12",
+  "acceptance_comparison": "score <= threshold",
+  "limits": "Selection and thresholds reuse calibration donors; no formal coverage guarantee."
+}
