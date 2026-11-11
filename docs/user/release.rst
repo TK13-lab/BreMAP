@@ -11,8 +11,9 @@ The composed Python API adds input inspection, program summaries and a single
 reproducibility record around those operations.
 
 The source repository is `TK13-lab/BreMAP <https://github.com/TK13-lab/BreMAP>`_.
-The code is licensed under MIT. A public PyPI release, verified Read the Docs URL
-and accepted manuscript are not claimed in this snapshot.
+The code is licensed under MIT. The `stable documentation
+<https://bremap.readthedocs.io/en/stable/>`_ is hosted on Read the Docs.
+A public PyPI release and accepted manuscript are not claimed in this snapshot.
 
 Citation
 --------

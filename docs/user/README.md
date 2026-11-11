@@ -47,6 +47,9 @@ keep held-out outcome labels outside model fitting and calibration.
 
 ## Documentation
 
+Read the **[online documentation](https://bremap.readthedocs.io/en/stable/)**
+for the stable release.
+
 The Sphinx guide covers installation, input schemas, representations, output
 interpretation, reference reuse, case studies, troubleshooting and API reference.
 To build and view it locally:
@@ -57,8 +60,8 @@ python -m sphinx -W --keep-going -b html docs/user outputs/documentation/html
 python -m http.server 8000 --bind 127.0.0.1 --directory outputs/documentation/html
 ```
 
-Open <http://127.0.0.1:8000>. Read the Docs configuration is included; a hosted
-URL will be added after deployment is verified. GitHub Actions checks the
+Open <http://127.0.0.1:8000>. Read the Docs configuration is included.
+GitHub Actions checks the
 installed-package tutorial and strict documentation build on pushes and pull requests.
 
 ## Scope and citation
