@@ -4,7 +4,7 @@ Release, citation and documentation builds
 Current snapshot
 ----------------
 
-This guide documents BReMAP 0.4.1. Package capabilities include custom reference
+This guide documents BReMAP 0.4.2. Package capabilities include custom reference
 states/programs, count SVD or supplied frozen embeddings, fitting and calibration,
 query mapping, annotation evaluation, reference sensitivity and portable resources.
 The composed Python API adds input inspection, program summaries and a single

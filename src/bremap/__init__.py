@@ -3,7 +3,7 @@
 from .core import ReferenceMapper
 from .transport import transport_plan, transport_predict
 
-__version__ = "0.4.1"
+__version__ = "0.4.2"
 __all__ = ["ReferenceMapper", "transport_plan", "transport_predict"]
 
 from .specification import ReferenceSpec

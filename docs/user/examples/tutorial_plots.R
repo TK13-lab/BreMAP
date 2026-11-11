@@ -1,0 +1,20 @@
+# Documentation-only rendering of the exact Python tutorial outputs.
+# Usage: Rscript tutorial_plots.R tutorial_run output_dir /path/to/arial.ttf
+args <- commandArgs(trailingOnly=TRUE)
+stopifnot(length(args) == 3, file.exists(args[3]))
+library(ggplot2)
+systemfonts::register_font('Arial', plain=args[3])
+dir.create(args[2], recursive=TRUE, showWarnings=FALSE)
+cells <- read.csv(file.path(args[1], 'mapping/cells.csv'), check.names=FALSE)
+cells$accepted <- tolower(cells$accepted) == 'true'
+programs <- read.csv(file.path(args[1], 'programs/cells.csv'))
+d <- merge(cells, programs, by=c('cell_id','donor_id'))
+d$State <- factor(d$candidate_state, levels=c('synthetic_quiescent','synthetic_cytotoxic'), labels=c('Synthetic quiescent','Synthetic cytotoxic'))
+colors <- c('Synthetic quiescent'='#0072B2','Synthetic cytotoxic'='#D55E00')
+theme_set(theme_classic(base_size=14,base_family='Arial') + theme(legend.position='top',legend.box='vertical',legend.title=element_blank(),panel.border=element_rect(fill=NA,color='grey40')))
+p <- ggplot(d,aes(quiescent,cytotoxic,color=State,shape=accepted)) + geom_point(size=3) + scale_color_manual(values=colors) + scale_shape_manual(values=c('FALSE'=4,'TRUE'=16),name='Accepted',labels=c('FALSE'='Rejected','TRUE'='Accepted')) + labs(x='Quiescent program score',y='Cytotoxic program score')
+ggsave(file.path(args[2],'tutorial_programs.png'),p,width=7,height=4.5,dpi=160,device=ragg::agg_png)
+accept <- aggregate(accepted ~ donor_id, cells, mean)
+accept$donor <- sub('query-donor-', 'Donor ', accept$donor_id)
+p <- ggplot(accept,aes(donor,accepted)) + geom_col(width=.55,fill='#0072B2') + scale_y_continuous(limits=c(0,1),breaks=c(0,.5,1),labels=c('0%','50%','100%'),expand=expansion(mult=c(0,.03))) + labs(x=NULL,y='Accepted query cells')
+ggsave(file.path(args[2],'tutorial_acceptance.png'),p,width=6,height=3.8,dpi=160,device=ragg::agg_png)

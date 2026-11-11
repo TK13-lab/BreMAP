@@ -1,0 +1,5 @@
+     cell_id  quiescent  cytotoxic
+query-cell-0      7.842      5.035
+query-cell-1      4.968      7.851
+query-cell-2      7.848      4.596
+query-cell-3      4.659      7.865

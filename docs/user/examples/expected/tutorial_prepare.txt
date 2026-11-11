@@ -1,0 +1,3 @@
+reference valid: True
+calibration valid: True
+query valid: True

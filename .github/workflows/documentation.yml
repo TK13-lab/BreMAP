@@ -20,5 +20,11 @@ jobs:
         run: python -I docs/user/examples/quickstart.py --out "$RUNNER_TEMP/bremap-quickstart"
       - name: Check tutorial mapping output
         run: python -I docs/user/examples/check_mapping.py "$RUNNER_TEMP/bremap-quickstart/workflow/mapping"
+      - name: Execute the step-by-step tutorial
+        run: |
+          mkdir "$RUNNER_TEMP/bremap-tutorial"
+          cp docs/user/examples/data/*.csv "$RUNNER_TEMP/bremap-tutorial/"
+          cd "$RUNNER_TEMP/bremap-tutorial"
+          python -I "$GITHUB_WORKSPACE/docs/user/examples/tutorial.py"
       - name: Build documentation with warnings treated as errors
         run: python -m sphinx -W --keep-going -b html docs/user outputs/documentation/html

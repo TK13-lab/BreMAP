@@ -23,7 +23,7 @@ source .venv/bin/activate  # Windows PowerShell: .venv\Scripts\Activate.ps1
 python -m pip install .
 ```
 
-This installs BReMAP 0.4.1 from source. No PyPI release is currently claimed.
+This installs BReMAP 0.4.2 from source. No PyPI release is currently claimed.
 NumPy, SciPy, pandas, scikit-learn and AnnData are installed as dependencies.
 Neither R nor a GPU is required for the package.
 

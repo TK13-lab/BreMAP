@@ -1,0 +1,6 @@
+     cell_id     candidate_state  accepted
+query-cell-0 synthetic_quiescent     False
+query-cell-1 synthetic_cytotoxic      True
+query-cell-2 synthetic_quiescent      True
+query-cell-3 synthetic_cytotoxic      True
+Accepted: 17/18 cells
