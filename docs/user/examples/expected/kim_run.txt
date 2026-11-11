@@ -1,0 +1,4 @@
+reference: cells=857 genes=29633 donors=6 valid=True
+calibration: cells=318 genes=29633 donors=2 valid=True
+query: cells=557 genes=29633 donors=4 valid=True
+PASS: donor-disjoint inputs; mapping, programs and reference archive written

@@ -1,0 +1,32 @@
+                                       n      mse
+model                                            
+geneformer_bremap_biology             26 0.048823
+geneformer_bremap_embedding           26 0.048213
+geneformer_direct_mapper              26 0.029302
+geneformer_direct_native              26 0.027081
+intercept                             26 0.048590
+rna_k03                               26 0.051020
+rna_k15                               26 0.053302
+rna_k30                               26 0.048881
+rna_k60                               26 0.049360
+rna_plus_geneformer_bremap_biology    26 0.050549
+rna_plus_geneformer_bremap_embedding  26 0.049527
+rna_plus_geneformer_direct_mapper     26 0.029330
+rna_plus_geneformer_direct_native     26 0.027141
+rna_plus_scgpt_bremap_biology         26 0.050200
+rna_plus_scgpt_bremap_embedding       26 0.048269
+rna_plus_scgpt_direct_mapper          26 0.047171
+rna_plus_scgpt_direct_native          26 0.061946
+rna_plus_svd_bremap_biology           26 0.050259
+rna_plus_svd_bremap_embedding         26 0.049400
+rna_plus_svd_direct_mapper            26 0.053357
+rna_plus_svd_direct_native            26 0.050710
+scgpt_bremap_biology                  26 0.048712
+scgpt_bremap_embedding                26 0.045905
+scgpt_direct_mapper                   26 0.046705
+scgpt_direct_native                   26 0.061967
+svd_bremap_biology                    26 0.049473
+svd_bremap_embedding                  26 0.047640
+svd_direct_mapper                     26 0.053391
+svd_direct_native                     26 0.042964
+PASS: readout keys unique and required values present

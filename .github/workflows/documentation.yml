@@ -2,6 +2,7 @@ name: Package and documentation
 on:
   push:
     branches: [main]
+    tags: ["v*"]
   pull_request:
 permissions:
   contents: read
@@ -17,5 +18,7 @@ jobs:
         run: python -m pip install . -r docs/user/requirements.txt
       - name: Exercise installed package and reusable reference
         run: python -I docs/user/examples/quickstart.py --out "$RUNNER_TEMP/bremap-quickstart"
+      - name: Check tutorial mapping output
+        run: python -I docs/user/examples/check_mapping.py "$RUNNER_TEMP/bremap-quickstart/workflow/mapping"
       - name: Build documentation with warnings treated as errors
         run: python -m sphinx -W --keep-going -b html docs/user outputs/documentation/html

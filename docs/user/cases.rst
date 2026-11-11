@@ -6,6 +6,22 @@ the validation is. They are not three universally validated preset models.
 The current package exposes reusable mapping APIs; study-specific regression,
 cohort sampling and manuscript rendering are separate analyses.
 
+Step-by-step guides
+-------------------
+
+Start with the common runner and checks, then follow your biological case.
+Each guide includes commands, input contracts, recorded output and the existing
+study visualization. Recorded biological results require the retained study
+inputs; they are not outputs of the synthetic quickstart.
+
+.. toctree::
+   :maxdepth: 1
+
+   case-workflow
+   case-cd4
+   case-multilineage
+   case-feline
+
 .. list-table:: Choose the example closest to your question
    :header-rows: 1
    :widths: 24 36 40

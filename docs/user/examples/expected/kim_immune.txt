@@ -1,0 +1,11 @@
+cells=557 donors=4 states=4
+scored=557 unscored=0
+acceptance_cell_weighted=0.9551
+acceptance_donor_macro=0.9542
+candidate_state_counts (all cells; not tissue proportions):
+candidate_state
+Cytotoxic CD8+ T    141
+Exhausted CD8+ T    136
+Naive CD4+ T        159
+Treg                121
+PASS: unique cells, valid donors, acceptance flags and normalized affinities

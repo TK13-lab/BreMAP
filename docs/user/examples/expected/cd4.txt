@@ -1,0 +1,7 @@
+                     donors  cells  acceptance    rho
+variant                                              
+affinity_biology          8   1548      0.8837 0.6671
+affinity_embedding        8   1548      0.9343 0.7125
+transport_biology         8   1548      0.8874 0.6675
+transport_embedding       8   1548      0.9320 0.7113
+PASS: readout keys unique and required values present

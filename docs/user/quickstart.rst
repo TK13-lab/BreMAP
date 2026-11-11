@@ -20,7 +20,7 @@ The chosen output directory must not already exist. You should see:
 
 .. code-block:: text
 
-   BReMAP 0.4.0: mapped 18 synthetic query cells / 3 donors
+   BReMAP 0.4.1: mapped 18 synthetic query cells / 3 donors
    Reference reuse: identical mapping; program and evaluation tables written
 
 The script checks that importing the saved reference gives exactly the same
