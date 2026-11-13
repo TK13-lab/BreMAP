@@ -118,3 +118,15 @@ These are the supported user-facing interfaces for the documented workflow.
 The package also exposes lower-level numerical/legacy interfaces, which are not
 required by these tutorials. This page does not import private research modules
 or present them as installed-package capabilities.
+
+Input and interactive workflow APIs
+------------------------------------------------------------
+
+.. automodule:: bremap.usability
+   :members: read_data, load_example, example_annotations, describe_data, prepare_partitions, run_analysis, WorkflowResult
+
+Optional visualization
+------------------------------------------------------------
+
+.. automodule:: bremap.plotting
+   :members: plot_result

@@ -1,3 +1,6 @@
-Mapping: True
-Programs: True
-Reusable reference: True
+cells                       18.0000
+donors                       3.0000
+accepted                    17.0000
+acceptance_cell_weighted     0.9444
+acceptance_donor_macro       0.9444
+dtype: float64

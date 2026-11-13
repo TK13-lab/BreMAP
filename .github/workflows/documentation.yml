@@ -15,7 +15,11 @@ jobs:
         with:
           python-version: '3.12'
       - name: Install package and documentation dependencies
-        run: python -m pip install . -r docs/user/requirements.txt
+        run: python -m pip install ".[plot]" -r docs/user/requirements.txt
+      - name: Test input guards and plotting APIs
+        env:
+          MPLBACKEND: Agg
+        run: python -m unittest discover -s tests -p 'test_bremap_usability.py'
       - name: Exercise installed package and reusable reference
         run: python -I docs/user/examples/quickstart.py --out "$RUNNER_TEMP/bremap-quickstart"
       - name: Check tutorial mapping output

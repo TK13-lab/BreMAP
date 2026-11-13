@@ -1,9 +1,9 @@
-"""BReMAP provisional research software for normal-reference analog mapping."""
+"""BReMAP configurable reference mapping and gene-program profiling."""
 
 from .core import ReferenceMapper
 from .transport import transport_plan, transport_predict
 
-__version__ = "0.4.2"
+__version__ = "0.5.0"
 __all__ = ["ReferenceMapper", "transport_plan", "transport_predict"]
 
 from .specification import ReferenceSpec
@@ -20,3 +20,9 @@ from .resources_io import export_reference, import_reference, export_embeddings
 
 __all__ += ['read_gene_programs', 'create_spec', 'inspect_input',
             'export_reference', 'import_reference', 'export_embeddings']
+
+from .usability import (read_data, load_example, example_annotations, describe_data,
+                        prepare_partitions, WorkflowResult, run_analysis)
+from .inputs import prepare_input
+__all__ += ['read_data', 'load_example', 'example_annotations', 'describe_data',
+            'prepare_partitions', 'WorkflowResult', 'run_analysis', 'prepare_input']

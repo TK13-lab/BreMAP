@@ -1,5 +1,5 @@
                                        n      mse
-model                                            
+model
 geneformer_bremap_biology             26 0.048823
 geneformer_bremap_embedding           26 0.048213
 geneformer_direct_mapper              26 0.029302

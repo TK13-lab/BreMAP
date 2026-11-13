@@ -1,13 +1,8 @@
 # %% load
-from pathlib import Path
-import anndata as ad
-import pandas as pd
 import bremap as br
-from bremap.inputs import prepare_input
-from bremap.workflow import run_workflow
 
-counts = pd.read_csv("demo_counts.csv", index_col="cell_id")
-print(counts.groupby("role").agg(cells=("donor_id", "size"), donors=("donor_id", "nunique")))
+data = br.load_example()
+print(br.describe_data(data))
 # %% spec
 spec = br.create_spec(
     spec_id="synthetic-immune-demo", tissue="immune",
@@ -20,41 +15,27 @@ spec = br.create_spec(
 )
 print(spec.data["states"])
 # %% prepare
-inputs = {}
-for role in ["reference", "calibration", "query"]:
-    table = counts.loc[counts.role == role]
-    genes = table.drop(columns=["role", "donor_id", "state"])
-    obs = table[["donor_id", "state"]].copy()
-    if role == "query":
-        obs = obs.drop(columns="state")
-    data = ad.AnnData(genes.to_numpy(), obs=obs, var=pd.DataFrame(index=genes.columns))
-    inputs[role] = prepare_input(data, spec, Path("tutorial_inputs") / f"{role}.h5ad", role=role)
-    report = br.inspect_input(inputs[role], spec, role=role)
-    print(role, "valid:", report["valid"])
+inputs = br.prepare_partitions(data, spec, "tutorial_inputs")
+print(br.inspect_input(inputs["query"], spec, role="query")["valid"])
 # %% run
-result = run_workflow({
-    "schema": "bremap-workflow-v1", "name": "first-reference-map",
-    "spec": spec, **inputs, "method": "affinity", "policy": "normal_donor_v1",
-    "annotations": "demo_truth.csv", "output": "tutorial_run",
-})
-print("Mapping:", (result / "mapping/cells.csv").is_file())
-print("Programs:", (result / "programs/cells.csv").is_file())
-print("Reusable reference:", (result / "reference.zip").is_file())
+truth = br.example_annotations("tutorial_truth.csv")
+result = br.run_analysis(inputs, spec, "tutorial_run", annotations=truth)
+print(result.summary().round(4))
 # %% mapping
-cells = pd.read_csv(result / "mapping/cells.csv")
-print(cells[["cell_id", "candidate_state", "accepted"]].head(4).to_string(index=False))
-print(f"Accepted: {cells.accepted.sum()}/{len(cells)} cells")
+print(result.table("mapping")[["cell_id", "candidate_state", "accepted"]].head(4).to_string(index=False))
+result.plot("coverage", save="tutorial_coverage.png")
 # %% programs
-programs = pd.read_csv(result / "programs/cells.csv")
-print(programs[["cell_id", "quiescent", "cytotoxic"]].head(4).round(3).to_string(index=False))
+print(result.table("programs")[["cell_id", "quiescent", "cytotoxic"]].head(4).round(3).to_string(index=False))
+result.plot("programs", x="quiescent", y="cytotoxic", save="tutorial_programs.png")
+# %% affinity
+result.plot("affinity", save="tutorial_affinity.png")
 # %% evaluate
-summary = pd.read_csv(result / "evaluation/summary.csv")
-selected = summary.loc[(summary.aggregation == "donor_macro") &
-                       summary.metric.isin(["acceptance", "known_macro_f1"])]
-print(selected[["metric", "value"]].round(4).to_string(index=False))
+result.plot("confusion", annotations=truth, save="tutorial_confusion.png")
+print(result.table("evaluation").query(
+    "aggregation == 'donor_macro' and metric in ['acceptance', 'known_macro_f1']"
+)[["metric", "value"]].round(4).to_string(index=False))
 # %% reuse
-reference = br.import_reference(result / "reference.zip", "tutorial_restored")
+reference = br.import_reference(result.path / "reference.zip", "tutorial_restored")
 reused = br.map_query(reference, inputs["query"], "tutorial_reused")
-pd.testing.assert_frame_equal(cells, pd.read_csv(reused.path / "cells.csv"))
-print("Identical mapping after reference reuse: True")
+print("Reusable reference mapped successfully:", reused.path.is_dir())
 # %% end

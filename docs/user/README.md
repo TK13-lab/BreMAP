@@ -20,14 +20,18 @@ git clone https://github.com/TK13-lab/BreMAP.git
 cd BreMAP
 python -m venv .venv
 source .venv/bin/activate  # Windows PowerShell: .venv\Scripts\Activate.ps1
-python -m pip install .
+python -m pip install ".[plot]"
 ```
 
-This installs BReMAP 0.4.2 from source. No PyPI release is currently claimed.
+This installs BReMAP 0.5.0 from source. No PyPI release is currently claimed.
 NumPy, SciPy, pandas, scikit-learn and AnnData are installed as dependencies.
 Neither R nor a GPU is required for the package.
 
 ## Run the tutorial
+
+For an interactive, API-led walkthrough with input loading, four plots and
+recorded output, start with the [Quickstart](https://bremap.readthedocs.io/en/stable/quickstart.html).
+The following script remains a minimal non-plotting smoke test.
 
 ```bash
 python docs/user/examples/quickstart.py --out bremap_quickstart

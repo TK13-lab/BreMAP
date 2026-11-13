@@ -1,33 +1,31 @@
-Quickstart: your first reference map
+Quickstart: an API-led reference analysis
 ============================================================
 
-Work through this page in one Python session or notebook: load a small example,
-call BReMAP APIs, inspect the tables and interpret the plots. Every output below
-was captured by executing these same code blocks; no biological data download
-or foundation-model weights are needed.
+This tutorial follows one analysis from input to interpretation. Run each short
+block in the same notebook or Python session. Every output and plot below comes
+from executing the displayed API calls. The plotting functions belong to BReMAP;
+no pandas conversion loop, research script or R installation is needed.
 
-Before you start
-----------------
+Install and start
+------------------------------
 
-Install BReMAP following :doc:`installation`. Download these two small files into
-a **new working folder**, then start Python or a notebook in that folder:
+This tutorial requires BReMAP **0.5.0** or newer, including its optional plotting
+dependencies. From a cloned checkout of the release:
 
-* :download:`demo_counts.csv <examples/data/demo_counts.csv>` — 54 invented cells,
-  eight genes, donor IDs and development-state labels.
-* :download:`demo_truth.csv <examples/data/demo_truth.csv>` — labels for the 18
-  query cells, kept separate from mapping inputs.
+.. code-block:: console
 
-The input is deliberately synthetic. It makes the complete tutorial reproducible
-without restricted data; :doc:`cases` describes biological applications.
-Output folders must not already exist. To repeat the whole tutorial, start in a
-new folder containing the two downloaded CSVs.
+   python -m pip install ".[plot]"
 
-1. Load the example counts
-------------------------------------
+Start in a fresh working directory; input and analysis artifacts are immutable.
+In a notebook the returned Figure is displayed directly. In a Python script,
+``save=`` writes it to disk. All paths below are relative to that directory.
 
-Read the supplied CSV in a Python session. Each partition has 18 cells and three
-donors; donor identities are distinct across partitions. The eight genes and two
-states are synthetic, designed to make the workflow easy to inspect.
+1. Load example data
+--------------------------------------------------------------------------------
+
+The package includes a small synthetic count table: 54 cells, eight genes and
+three donor-disjoint roles. ``br.load_example`` returns AnnData; there is no manual
+CSV conversion and no external download. ``br.describe_data`` reports each role.
 
 .. literalinclude:: examples/tutorial.py
    :language: python
@@ -39,11 +37,11 @@ Output:
 .. literalinclude:: examples/expected/tutorial_load.txt
    :language: text
 
-2. Define what the reference should describe
-------------------------------------------------------
+2. Define states and gene programs
+--------------------------------------------------------------------------------
 
-Declare two reference states and two gene programs with ``br.create_spec``.
-Replace these lists for a real task; they are not validated immune signatures.
+Use ``br.create_spec`` to declare the reference vocabulary and positive gene lists.
+These invented profiles demonstrate software behavior, not biological validation.
 
 .. literalinclude:: examples/tutorial.py
    :language: python
@@ -55,12 +53,12 @@ Output:
 .. literalinclude:: examples/expected/tutorial_spec.txt
    :language: text
 
-3. Prepare and validate the three partitions
-------------------------------------------------------
+3. Prepare and check inputs
+--------------------------------------------------------------------------------
 
-``prepare_input`` writes validated AnnData files. Query state labels are absent:
-the separate truth table will be used only for evaluation. ``True`` means the
-input passes the software contract, not that the reference is biologically suitable.
+``br.prepare_partitions`` uses the roles already declared in the metadata. It
+checks donor separation, validates all three inputs, and removes query state labels.
+It does not choose the donor split for you. Invalid inputs leave no destination.
 
 .. literalinclude:: examples/tutorial.py
    :language: python
@@ -72,12 +70,12 @@ Output:
 .. literalinclude:: examples/expected/tutorial_prepare.txt
    :language: text
 
-4. Run reference fitting, calibration and mapping
------------------------------------------------------------
+4. Run the complete analysis
+--------------------------------------------------------------------------------
 
-Call ``run_workflow`` once. It fits on reference donors, calibrates on separate
-donors, maps query cells and writes program scores and a reusable reference.
-The historical policy name ``normal_donor_v1`` does not restrict the task to normal tissue.
+``br.run_analysis`` fits, calibrates, maps, scores programs and evaluates the
+separate labels. It returns a ``WorkflowResult`` with table, summary and plot
+methods. Labels returned by ``br.example_annotations`` are not included in query inputs.
 
 .. literalinclude:: examples/tutorial.py
    :language: python
@@ -89,12 +87,12 @@ Output:
 .. literalinclude:: examples/expected/tutorial_run.txt
    :language: text
 
-5. Inspect the mapped cells
--------------------------------------
+5. Inspect assignments and coverage
+--------------------------------------------------------------------------------
 
-``candidate_state`` is the closest declared state. ``accepted`` separately records
-whether the cell passed the calibrated compatibility rule. A candidate label can
-therefore be present even when the cell is rejected.
+A candidate label is a suggestion; acceptance is a separate compatibility decision.
+The bars show accepted counts over total cells for each donor. Keep both
+cell-weighted and donor-macro acceptance when donor sample sizes differ.
 
 .. literalinclude:: examples/tutorial.py
    :language: python
@@ -106,47 +104,60 @@ Output:
 .. literalinclude:: examples/expected/tutorial_mapping.txt
    :language: text
 
-.. image:: _images/tutorial_acceptance.png
-   :alt: Acceptance fraction for each of the three synthetic query donors.
-   :width: 85%
+.. figure:: _images/tutorial_coverage.png
+   :alt: Accepted query cells by donor; counts in each bar show the denominator.
+   :width: 100%
 
-One of the 18 cells is rejected. Keeping this distinction visible prevents
-interpreting every candidate label as an accepted assignment.
+   Accepted query cells by donor; counts in each bar show the denominator.
 
-6. Examine the gene-program profiles
-----------------------------------------------
+6. Visualize gene programs
+--------------------------------------------------------------------------------
 
-Read the program scores generated by BReMAP. These are mean log1p(CP10k) values
-on the reference gene universe, not affinity probabilities.
+Call ``result.plot`` directly from your Python notebook. Each point is a scored
+query cell, colored by candidate state; a black cross identifies a rejected cell.
+Program axes show mean log1p(CP10k) expression, not state probabilities.
 
 .. literalinclude:: examples/tutorial.py
    :language: python
    :start-after: # %% programs
-   :end-before: # %% evaluate
+   :end-before: # %% affinity
 
 Output:
 
 .. literalinclude:: examples/expected/tutorial_programs.txt
    :language: text
 
-.. image:: _images/tutorial_programs.png
-   :alt: Synthetic query cells separated by quiescent and cytotoxic RNA program scores; a cross marks the rejected cell.
+.. figure:: _images/tutorial_programs.png
+   :alt: Program scores and candidate states; crosses mark rejected cells.
    :width: 100%
 
-Each point is one query cell; color shows its candidate state, and a cross marks
-rejection. The two program axes separate the invented profiles. These plots use
-the exact CSV outputs above. They were rendered with native R for the documentation;
-BReMAP currently returns tables and does not expose a plotting API. R is not
-required to run the mapping tutorial. The optional
-:download:`plotting source <examples/tutorial_plots.R>` reproduces both images
-with ggplot2, ragg, systemfonts and an explicitly supplied Arial font file.
+   Program scores and candidate states; crosses mark rejected cells.
 
-7. Check annotation agreement
----------------------------------------
+7. Inspect reference affinities per cell
+--------------------------------------------------------------------------------
 
-The workflow evaluated the separate synthetic truth table. Show donor-macro
-acceptance and macro-F1. Strong agreement is expected for this deliberately easy
-example; it is not evidence of accuracy on a biological cohort.
+The heatmap shows conditional state affinity for each query cell, sorted by
+candidate state and cell ID, including rejected cells. Missing scores remain blank.
+For a donor-mean view use ``result.plot("affinity", group_by="donor_id")``. Fixed limits of zero and one support comparison within this
+reference vocabulary. Affinity is not tissue composition or a malignancy probability.
+
+.. literalinclude:: examples/tutorial.py
+   :language: python
+   :start-after: # %% affinity
+   :end-before: # %% evaluate
+
+.. figure:: _images/tutorial_affinity.png
+   :alt: Cell-level reference affinities; candidate-state ordering makes the two profiles visible.
+   :width: 100%
+
+   Cell-level reference affinities; candidate-state ordering makes the two profiles visible.
+
+8. Check separate annotations
+--------------------------------------------------------------------------------
+
+The confusion plot uses candidate states for all query cells, including rejected
+cells. It requires cell and donor IDs to match the separate annotation table.
+The synthetic data are deliberately easy: high F1 does not validate a biological model.
 
 .. literalinclude:: examples/tutorial.py
    :language: python
@@ -158,11 +169,18 @@ Output:
 .. literalinclude:: examples/expected/tutorial_evaluate.txt
    :language: text
 
-8. Reuse the calibrated reference
--------------------------------------------
+.. figure:: _images/tutorial_confusion.png
+   :alt: Separate synthetic annotations versus candidate labels, including rejected cells.
+   :width: 100%
 
-Import the exported reference and map the same query with ``br.map_query``.
-The equality check verifies that the saved reference reproduces the original mapping.
+   Separate synthetic annotations versus candidate labels, including rejected cells.
+
+9. Reuse the calibrated reference
+--------------------------------------------------------------------------------
+
+Export is automatic in the workflow. Import the archive and map a compatible
+query without fitting again. The tutorial verification also checks exact equality
+between the first and reused mappings.
 
 .. literalinclude:: examples/tutorial.py
    :language: python
@@ -174,12 +192,38 @@ Output:
 .. literalinclude:: examples/expected/tutorial_reuse.txt
    :language: text
 
-What to do next
----------------
+Use your own data
+------------------------------
 
-You have prepared inputs, run a complete mapping workflow, inspected scores and
-acceptance, evaluated separate labels and reused a saved reference. Continue with
-:doc:`own-data` to substitute your own counts, or :doc:`representations` to supply
-compatible embeddings. The optional :download:`notebook-style Python source
-<examples/tutorial.py>` contains the same short steps; it is not necessary to
-run a separate script to use the APIs on this page.
+Use package loaders rather than rebuilding AnnData by hand:
+
+.. code-block:: python
+
+   # Raw counts in X:
+   data = br.read_data("my_cells.h5ad")
+   # Or explicitly use a stored raw-count layer:
+   data = br.read_data("my_cells.h5ad", counts_layer="counts")
+   # CSV: specify metadata; all remaining columns are gene counts.
+   data = br.read_data("my_counts.csv",
+                       metadata_columns=["role", "donor_id", "state"])
+   print(br.describe_data(data))
+   inputs = br.prepare_partitions(data, spec, "my_inputs")
+   result = br.run_analysis(inputs, spec, "my_analysis")
+
+Choose **one** loader for your format. The metadata must already contain the
+reference/calibration/query roles and consistent donor IDs; the package refuses
+donor overlap. CSV cell IDs are in ``cell_id`` by default. For other names, use
+``cell_id=`` in ``read_data`` and ``role_column=``, ``donor_column=`` and
+``label_column=`` in ``prepare_partitions``. Reference and calibration labels must
+match ``spec``. Query labels may be empty and are removed during preparation.
+No annotation table is required to map your own query.
+
+Do not round normalized values to pass the raw-count check. Keep unrelated
+metadata in ``metadata_columns``; otherwise it would be treated as genes.
+For precomputed scGPT/Geneformer vectors, use H5AD and follow
+:doc:`representations` for alignment/provenance. The loader does not compute
+foundation-model embeddings.
+
+Continue with :doc:`own-data`, :doc:`outputs` and :doc:`cases`. The complete
+:download:`tutorial source <examples/tutorial.py>` is available for convenience;
+every step above uses the same installed public API.
