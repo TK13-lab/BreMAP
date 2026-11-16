@@ -44,7 +44,8 @@ Missing embedding or missing provenance
 Embedding dimensions/provenance disagree
    Recheck checkpoint, preprocessing, extraction universe and row alignment.
    Re-extract incompatible inputs with a common procedure; do not merely change
-   the metadata label. The package does not run encoder inference for you.
+   the metadata label. Optional TeacherEncoder adapters require explicit checkpoint
+   and extraction options; see :doc:`distillation`.
 
 Mapping and output folders
 --------------------------
@@ -79,3 +80,25 @@ synthetic example is preferable to sharing a full patient dataset. Include the
 relevant inspection errors and input dimensions, with identifiers appropriate
 for the sharing context. Report reproducible problems at
 `GitHub Issues <https://github.com/TK13-lab/BreMAP/issues>`_.
+
+Teacher/student input checks
+-----------------------------
+
+* **Checkpoint file missing:** provide the actual local checkpoint directory.
+  scGPT needs ``args.json``, ``vocab.json`` and ``best_model.pt``; Geneformer
+  needs its configuration, weights and official tokenizer assets.
+* **Cache fingerprint differs:** counts, IDs, options, weights or adapter changed.
+  Use a new cache destination for the changed experiment. Do not overwrite a
+  verified cache to make incompatible settings appear reusable.
+* **Train/validation donor overlap:** prepare disjoint patient partitions before
+  fitting. Renaming the same person does not create biological independence.
+* **Student gene coverage below threshold:** check gene naming and assay coverage.
+  Deliberately choose a supported feature universe; lowering the threshold alone
+  does not validate the predictions.
+* **Teacher/student provenance differs:** use the same teacher recipe for target
+  generation and a separate student-derived reference for student query vectors.
+* **Mapping/annotation IDs or donors differ:** supply ``cell_id`` and ``donor_id``
+  for the same query cells. ``evaluate_student`` rejects partial/positional joins.
+* **case_pass is None:** task truth was not supplied. High agreement cannot
+  establish absolute task quality. With truth, inspect donor metrics and the
+  explicitly chosen thresholds before interpreting ``case_pass``.

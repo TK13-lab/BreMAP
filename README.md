@@ -8,8 +8,11 @@ and export reusable reference resources in one reproducible workflow.
 References and programs are user-defined. Immune, stromal, epithelial and vascular
 populations can be studied when suitable reference data and validation are available.
 Use count-derived SVD or compatible precomputed embeddings, including scGPT and
-Geneformer representations. Foundation models are optional; BReMAP does not train
-or run the encoders and does not assume that their features outperform simpler inputs.
+Geneformer representations. Optional TeacherEncoder adapters generate embeddings
+from your counts using local pretrained scGPT/Geneformer checkpoints. StudentEncoder
+trains a compact model from paired counts and teacher vectors for your own task.
+Foundation models are optional; no foundation-model retraining or universal student
+checkpoint is required or claimed.
 
 ## Install
 
@@ -23,9 +26,11 @@ source .venv/bin/activate  # Windows PowerShell: .venv\Scripts\Activate.ps1
 python -m pip install ".[plot]"
 ```
 
-This installs BReMAP 0.5.0 from source. No PyPI release is currently claimed.
+This installs BReMAP 0.6.0 from source. No PyPI release is currently claimed.
 NumPy, SciPy, pandas, scikit-learn and AnnData are installed as dependencies.
-Neither R nor a GPU is required for the package.
+Neither R nor a GPU is required for count-SVD mapping or student inference.
+Student training additionally uses `.[train]`; teacher extraction needs the
+upstream encoder environment and checkpoint. Geneformer extraction requires CUDA.
 
 ## Run the tutorial
 
@@ -42,8 +47,11 @@ The example creates synthetic inputs, calls only installed BReMAP APIs, maps
 that a reused reference produces identical mappings. Use a new output destination.
 The synthetic programs demonstrate software usage, not biological validation.
 
-Start with `bremap.create_spec`, `bremap.inputs.prepare_input` and
-`bremap.workflow.run_workflow`; use the individual APIs for finer control.
+Start with `bremap.read_data`, `bremap.create_spec`, `bremap.prepare_partitions` and
+`bremap.run_analysis`; use the individual APIs for finer control.
+For encoder targets and your own student, see the
+[distillation guide](https://bremap.readthedocs.io/en/stable/distillation.html) and
+[scoped T-cell tutorial](https://bremap.readthedocs.io/en/stable/scoped-student.html).
 Read the [quickstart](https://github.com/TK13-lab/BreMAP/blob/main/docs/user/quickstart.rst)
 and [own-data tutorial](https://github.com/TK13-lab/BreMAP/blob/main/docs/user/own-data.rst)
 before preparing a real dataset. Split donors across development and query data;

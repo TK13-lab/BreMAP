@@ -2,7 +2,7 @@ Application case studies
 ========================
 
 These cases explain what users can do with reference profiles and how strong
-the validation is. They are not three universally validated preset models.
+the validation is. They are not universally validated preset models.
 The current package exposes reusable mapping APIs; study-specific regression,
 cohort sampling and manuscript rendering are separate analyses.
 
@@ -21,6 +21,7 @@ inputs; they are not outputs of the synthetic quickstart.
    case-cd4
    case-multilineage
    case-feline
+   scoped-student
 
 .. list-table:: Choose the example closest to your question
    :header-rows: 1
@@ -38,6 +39,17 @@ inputs; they are not outputs of the synthetic quickstart.
    * - FELINE
      - How much endpoint information is retained after mapping native representations to reference coordinates?
      - Exploratory, concurrent RNA-score changes; not pretreatment clinical-response prediction.
+
+Scoped student: train once for a declared task
+------------------------------------------------------------
+
+The :doc:`scoped-student` recipe uses only BReMAP APIs to create scGPT targets,
+train/save/load a small student and fit a compatible reference. The frozen
+student achieved 92.0% teacher agreement and 0.817 macro-F1 in 1435 cells from
+four new biopsy patients, with 97.96% coverage. The initial LN test missed its
+absolute-F1 threshold and remains reported. This supports task-specific CPU
+reuse, not a universal checkpoint. The processed study files and teacher weights
+are not bundled; the page identifies the required user-prepared inputs.
 
 CD4: compare RNA profiles with measured protein
 -----------------------------------------------

@@ -3,7 +3,7 @@
 from .core import ReferenceMapper
 from .transport import transport_plan, transport_predict
 
-__version__ = "0.5.0"
+__version__ = "0.6.0"
 __all__ = ["ReferenceMapper", "transport_plan", "transport_predict"]
 
 from .specification import ReferenceSpec
@@ -26,3 +26,13 @@ from .usability import (read_data, load_example, example_annotations, describe_d
 from .inputs import prepare_input
 __all__ += ['read_data', 'load_example', 'example_annotations', 'describe_data',
             'prepare_partitions', 'WorkflowResult', 'run_analysis', 'prepare_input']
+from .usability import apply_reference, compare_measurement
+__all__ += ['apply_reference', 'compare_measurement']
+from .plotting import plot_donor_correlations
+__all__ += ['plot_donor_correlations']
+from .usability import attach_embeddings
+__all__ += ['attach_embeddings']
+from .student import StudentEncoder, evaluate_student
+__all__ += ['StudentEncoder', 'evaluate_student']
+from .teachers import TeacherEncoder
+__all__ += ['TeacherEncoder']

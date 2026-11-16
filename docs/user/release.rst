@@ -4,7 +4,7 @@ Release, citation and documentation builds
 Current snapshot
 ----------------
 
-This guide documents BReMAP 0.5.0. Package capabilities include custom reference
+This guide documents BReMAP 0.6.0. Package capabilities include custom reference
 states/programs, count SVD or supplied frozen embeddings, fitting and calibration,
 query mapping, annotation evaluation, reference sensitivity and portable resources.
 The composed Python API adds input inspection, program summaries and a single
@@ -65,3 +65,20 @@ Read the Docs' `Sphinx deployment guide
 <https://docs.readthedocs.com/platform/stable/intro/sphinx.html>`_ describes the
 hosting setup. The `TCRi documentation <https://tcri.readthedocs.io/en/stable/index.html>`_
 provided a user-journey reference for this documentation design.
+
+Changes in 0.6.0
+----------------
+
+* Optional local scGPT/Geneformer teacher adapters with chunked verified caches.
+* Experimental dataset-specific student fitting, portable NPZ save/load and CPU
+  inference; no universal student checkpoint is distributed.
+* Teacher/student evaluation from exact-ID tables or CSVs, with optional absolute
+  F1 and coverage checks alongside relative fidelity.
+* Canonical target-memory layout prevents different student fits caused solely
+  by in-memory versus CSV DataFrame storage order.
+* A documented T-cell application retains the initial LN absolute-F1 miss and a
+  frozen four-patient follow-up; stronger transfer/noninferiority claims are not made.
+
+Earlier study outputs retain their original version/protocol records. Adding
+optional acceptance checks does not change historical mapping results or the
+meaning of the existing ``joint_pass`` field. See :doc:`scoped-student`.

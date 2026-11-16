@@ -10,8 +10,10 @@ state affinities, RNA-program profiles and acceptance diagnostics together.
 
 References can describe immune, stromal, epithelial, vascular or other eligible
 human cell populations. Neither normal epithelium nor breast tissue is required.
-Use count-derived SVD or supply compatible frozen embeddings from an external
-encoder. The package does not train or download foundation models.
+Choose count SVD, supply compatible embeddings, or generate them with an optional
+local scGPT/Geneformer adapter. Train a small student on your own paired data when
+you need repeated CPU inference within a validated task. The package does not
+download checkpoints or retrain foundation models.
 
 Start here
 ----------
@@ -19,6 +21,8 @@ Start here
 * :doc:`installation`: install the package and check your environment.
 * :doc:`quickstart`: run a complete, tiny synthetic example without a dataset download.
 * :doc:`own-data`: replace that example with your reference, counts and programs.
+* :doc:`distillation`: generate teacher vectors and train your own scoped student.
+* :doc:`scoped-student`: follow a measured T-cell application, including its limits.
 * :doc:`outputs`: understand what each table can support downstream.
 
 The workflow
@@ -62,7 +66,10 @@ and unfavorable comparisons.
    :caption: User guide
 
    own-data
+   input-options
    representations
+   distillation
+   scoped-student
    outputs
    reuse
    cases

@@ -12,20 +12,27 @@ and a useful starting point before adding an encoder dependency.
 **Supplied frozen embeddings:** set ``embedding_key`` to an existing AnnData slot,
 for example ``X_scgpt``, ``X_geneformer`` or a user-defined name. BReMAP accepts
 numeric vectors; it does not verify biological quality from the slot name.
-The package does not download model weights, tokenize cells, extract embeddings
-or fine-tune an encoder.
+The base workflow accepts precomputed vectors. The optional
+:doc:`distillation` API can also extract them using explicitly configured local
+scGPT/Geneformer checkpoints, and train a dataset-specific student. It does not
+download checkpoints or fine-tune a foundation model.
 
 For every input partition, provide:
 
 .. code-block:: python
 
-   # vectors must already be aligned to data.obs_names.
-   data.obsm["X_encoder"] = vectors
-   data.uns["bremap_embedding_provenance"] = {
-       "X_encoder": "encoder/checkpoint/preprocessing/gene-universe identifier"
-   }
+   import bremap as br
 
-Create the specification with ``embedding_key="X_encoder"``. Use identical
+   data = br.attach_embeddings(
+       data, "cell_embeddings.csv", key="X_encoder",
+       model="scgpt", checkpoint="my-checkpoint-identifier",
+       preprocessing="my-fixed-extraction-recipe",
+   )
+
+The CSV must contain unique ``cell_id`` values matching the count input exactly,
+followed by numeric embedding columns. Rows are joined by ID, not position.
+Create the specification with ``representation="scgpt"`` and
+``embedding_key="X_encoder"``. Use identical
 provenance and dimensions across reference, calibration and query. Keep the
 checkpoint, feature universe and extraction recipe in your own provenance record.
 Copying the same metadata string onto incompatible vectors does not make them

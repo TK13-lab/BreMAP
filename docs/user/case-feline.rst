@@ -30,7 +30,9 @@ bundled with the package.
 Follow :doc:`case-workflow` using the declared reference and calibration donors.
 For scGPT/Geneformer, supply cell-aligned embeddings with matching provenance
 across roles as described in :doc:`representations`. Counts are still required.
-The package does not download or run these encoders.
+Optional TeacherEncoder adapters can generate new vectors (see :doc:`distillation`),
+but do not automatically reproduce the historical FELINE extraction recipe.
+Checkpoints are not downloaded by the package.
 
 In the recorded extraction, nine validation genes were withheld from encoder
 inputs. Merely removing those genes from counts after computing embeddings does

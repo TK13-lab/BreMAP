@@ -1,6 +1,9 @@
 Use your own data
 =================
 
+See :doc:`input-options` for count files, model choices, custom program files and
+validation errors.
+
 Start with the question
 -----------------------
 

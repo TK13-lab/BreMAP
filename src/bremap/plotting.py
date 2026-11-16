@@ -58,6 +58,19 @@ def plot_result(result, kind, *, x=None, y=None, annotations=None, group_by=None
         ax.set_yticks(range(len(table)),table.index.astype(str),fontsize=8)
         ax.set(ylabel='Cell' if group_by is None else group_by, xlabel='Reference state')
         fig.colorbar(image,ax=ax,label='Conditional affinity' if group_by is None else 'Mean conditional affinity (scored cells)')
+    elif kind == 'measurement':
+        from .usability import compare_measurement
+        if annotations is None:
+            plt.close(fig)
+            raise ValueError('Separate measurements required')
+        joined, diagnostics = compare_measurement(cells, annotations, state=x, measurement=y)
+        score = 'conditional_affinity::'+x
+        valid = np.isfinite(joined[[score,y]]).all(axis=1)
+        for accepted, label, color, marker in [(True,'Accepted','#0072B2','o'),(False,'Unassigned','#D55E00','x')]:
+            block=joined.loc[valid & joined.accepted.eq(accepted)]
+            ax.scatter(block[score],block[y],s=22,alpha=.65,color=color,marker=marker,label=f'{label} (n={len(block)})')
+        ax.set(xlim=(-.02,1.02),xlabel=f'Reference affinity: {x}',ylabel=y)
+        ax.legend(frameon=False)
     elif kind == 'confusion':
         if annotations is None:
             plt.close(fig)
@@ -77,7 +90,75 @@ def plot_result(result, kind, *, x=None, y=None, annotations=None, group_by=None
         fig.colorbar(image,ax=ax,label='Cells')
     else:
         plt.close(fig)
-        raise ValueError('kind must be programs, affinity, coverage or confusion')
+        raise ValueError('kind must be programs, affinity, coverage, measurement or confusion')
     if save is not None:
         fig.savefig(save,dpi=160,bbox_inches='tight')
+    return fig
+
+
+def plot_donor_correlations(data, *, baseline='rna_program_rho', reference='spearman_rho',
+                            donor_column='donor_id',
+                            labels=('Naive RNA program', 'BReMAP naive affinity'), save=None):
+    """Plot paired within-donor correlations from a DataFrame or CSV path.
+
+    Each row must identify one donor and two correlations with the same measured
+    target on matched eligible cells. This function does not compute correlations
+    or verify how their targets/folds were obtained. Values must be in [-1, 1];
+    NaNs remain visible as missing, never converted to zero or silently dropped.
+    Input row order is preserved, top to bottom. No significance test is performed.
+
+    Parameters
+    ----------
+    data : pandas.DataFrame or path-like
+        One row per donor. Defaults match the real-CD4 donor_validation.csv.
+    baseline, reference : str
+        Distinct numeric correlation columns, interpreted on the same scale.
+    donor_column : str
+        Unique, nonempty donor identifiers.
+    labels : pair of str
+        Baseline and reference legend labels, respectively.
+    save : path-like, optional
+        PNG/PDF/SVG destination; otherwise display the returned Figure in a notebook.
+
+    Returns
+    -------
+    matplotlib.figure.Figure
+        Customizable figure; plotting does not change input data.
+    """
+    table = data.copy() if isinstance(data, pd.DataFrame) else pd.read_csv(data, dtype={donor_column:str})
+    if baseline == reference or donor_column in (baseline, reference):
+        raise ValueError('Specify distinct donor and correlation columns')
+    if table.empty or not set([donor_column, baseline, reference]) <= set(table):
+        raise ValueError('Expected nonempty table with donor and both correlation columns')
+    donors = table[donor_column]
+    if donors.isna().any() or donors.astype(str).str.strip().eq('').any() or donors.astype(str).duplicated().any():
+        raise ValueError('Donor identifiers must be unique and nonempty')
+    if isinstance(labels, str) or len(labels) != 2 or any(not isinstance(v,str) or not v.strip() for v in labels):
+        raise ValueError('Provide two nonempty legend labels')
+    scores = table[[baseline, reference]].apply(pd.to_numeric, errors='raise').to_numpy(dtype=float, na_value=np.nan)
+    if np.isinf(scores).any() or (np.abs(scores[~np.isnan(scores)]) > 1).any():
+        raise ValueError('Correlations must be in [-1, 1]; use NaN for unavailable values')
+    try:
+        import matplotlib.pyplot as plt
+    except ImportError as exc:
+        raise ImportError('Install bremap[plot] to use visualization') from exc
+    fig, ax = plt.subplots(figsize=(7, max(3.5, len(table)*.42+1.4)), layout='constrained')
+    positions = np.arange(len(table))
+    complete = ~np.isnan(scores).any(axis=1)
+    for i in positions[complete]:
+        ax.plot(scores[i], [i,i], color='#999999', zorder=1)
+    for j, color in enumerate(['#777777', '#0072B2']):
+        valid = ~np.isnan(scores[:,j])
+        ax.scatter(scores[valid,j], positions[valid], label=labels[j], color=color, s=55, zorder=2)
+    for i in positions[~complete]:
+        missing = ', '.join(labels[j] for j in range(2) if np.isnan(scores[i,j]))
+        ax.text(1.02, i, 'Missing: '+missing, transform=ax.get_yaxis_transform(),
+                va='center', fontsize=9, color='#666666')
+    ax.set_yticks(positions, donors.astype(str))
+    ax.set(xlim=(-1,1), xlabel='Within-donor correlation with measured target', ylabel='Donor')
+    ax.invert_yaxis()
+    ax.axvline(0, color='#bbbbbb', lw=1, zorder=0)
+    ax.legend(frameon=False, loc='upper center', bbox_to_anchor=(.5,1.2))
+    if save is not None:
+        fig.savefig(save, dpi=160, bbox_inches='tight')
     return fig

@@ -1,10 +1,24 @@
 Python API reference
 ====================
 
+Teacher and experimental student APIs
+-------------------------------------------
+
+See :doc:`distillation` for input contracts, examples and validation limits.
+
+.. autoclass:: bremap.TeacherEncoder
+   :members: transform, attach
+
+.. autoclass:: bremap.StudentEncoder
+   :members: fit, transform, attach, save, load, fingerprint
+
+.. autofunction:: bremap.evaluate_student
+
 Signatures below are imported from the installed BReMAP version used to build
 this documentation. The primary workflow is specification → preparation → fit →
-calibrate → map. The convenience orchestrator returns an output path; individual
-mapping functions return artifact objects.
+calibrate → map. ``run_analysis`` returns a ``WorkflowResult`` with table/plot access; the
+lower-level ``run_workflow`` returns an output path and individual mapping
+functions return artifact objects.
 
 Specifications and gene programs
 --------------------------------
@@ -123,10 +137,10 @@ Input and interactive workflow APIs
 ------------------------------------------------------------
 
 .. automodule:: bremap.usability
-   :members: read_data, load_example, example_annotations, describe_data, prepare_partitions, run_analysis, WorkflowResult
+   :members: read_data, load_example, example_annotations, describe_data, prepare_partitions, run_analysis, WorkflowResult, attach_embeddings, apply_reference, compare_measurement
 
 Optional visualization
 ------------------------------------------------------------
 
 .. automodule:: bremap.plotting
-   :members: plot_result
+   :members: plot_result, plot_donor_correlations

@@ -51,6 +51,9 @@ class ReferenceSpec:
             raise ValueError('raw_svd representation cannot declare an embedding key')
         if representation['kind'] == 'frozen_embedding' and (not isinstance(representation.get('key'), str) or not representation['key'].strip()):
             raise ValueError('Frozen embedding representation requires a key')
+        if 'encoder' in representation:
+            if representation['kind'] != 'frozen_embedding' or representation['encoder'] not in ('scgpt','geneformer','custom'):
+                raise ValueError('Named encoder requires frozen embeddings and scgpt, geneformer or custom')
         programs = data.get('programs', {})
         anchors = programs.get('anchors') if isinstance(programs, dict) else None
         if not isinstance(anchors, dict) or not anchors:
@@ -83,6 +86,16 @@ class ReferenceSpec:
             if identity.get(key) != self.data[key]:
                 raise ValueError(f'H5AD {key} does not match the reference specification')
         validate_gene_symbols(data.var_names)
+        rep = self.data['representation']
+        if 'encoder' in rep:
+            metadata = data.uns.get('bremap_encoder_metadata', {}).get(rep['key'], {})
+            if metadata.get('model') != rep['encoder']:
+                raise ValueError(f"Expected {rep['encoder']} metadata for obsm[{rep['key']!r}]; got {metadata.get('model')!r}. Use attach_embeddings with the actual model; do not relabel incompatible vectors.")
+            if any(not isinstance(metadata.get(k),str) or not metadata[k].strip() for k in ('checkpoint','preprocessing')):
+                raise ValueError('Embedding checkpoint and preprocessing provenance are required; use attach_embeddings')
+            expected = json.dumps({k:metadata[k] for k in ('model','checkpoint','preprocessing')},sort_keys=True)
+            if data.uns.get('bremap_embedding_provenance',{}).get(rep['key']) != expected:
+                raise ValueError('Embedding provenance conflicts with encoder metadata; reattach the correct vectors and provenance')
 
 
 def validate_gene_symbols(genes):
