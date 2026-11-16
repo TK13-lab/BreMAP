@@ -26,7 +26,7 @@ source .venv/bin/activate  # Windows PowerShell: .venv\Scripts\Activate.ps1
 python -m pip install ".[plot]"
 ```
 
-This installs BReMAP 0.6.0 from source. No PyPI release is currently claimed.
+This installs BReMAP 0.6.1 from source. No PyPI release is currently claimed.
 NumPy, SciPy, pandas, scikit-learn and AnnData are installed as dependencies.
 Neither R nor a GPU is required for count-SVD mapping or student inference.
 Student training additionally uses `.[train]`; teacher extraction needs the
@@ -64,17 +64,7 @@ for the stable release.
 
 The Sphinx guide covers installation, input schemas, representations, output
 interpretation, reference reuse, case studies, troubleshooting and API reference.
-To build and view it locally:
-
-```bash
-python -m pip install -r docs/user/requirements.txt
-python -m sphinx -W --keep-going -b html docs/user outputs/documentation/html
-python -m http.server 8000 --bind 127.0.0.1 --directory outputs/documentation/html
-```
-
-Open <http://127.0.0.1:8000>. Read the Docs configuration is included.
-GitHub Actions checks the
-installed-package tutorial and strict documentation build on pushes and pull requests.
+GitHub Actions checks the installed-package tutorial and documentation build.
 
 ## Scope and citation
 

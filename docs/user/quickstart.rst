@@ -9,7 +9,7 @@ no pandas conversion loop, research script or R installation is needed.
 Install and start
 ------------------------------
 
-This tutorial requires BReMAP **0.6.0**, including its optional plotting
+This tutorial requires BReMAP **0.6.1**, including its optional plotting
 dependencies. From a cloned checkout of the release:
 
 .. code-block:: console
