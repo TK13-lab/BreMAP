@@ -9,15 +9,13 @@ cohort sampling and manuscript rendering are separate analyses.
 Step-by-step guides
 -------------------
 
-Start with the common runner and checks, then follow your biological case.
-Each guide includes commands, input contracts, recorded output and the existing
-study visualization. Recorded biological results require the retained study
+Choose a biological case below. For the shared API workflow, see :doc:`quickstart`
+and :doc:`own-data`. Recorded biological results require the retained study
 inputs; they are not outputs of the synthetic quickstart.
 
 .. toctree::
    :maxdepth: 1
 
-   case-workflow
    case-cd4
    case-multilineage
    case-feline

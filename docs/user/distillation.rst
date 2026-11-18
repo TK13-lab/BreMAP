@@ -33,6 +33,16 @@ used for that teacher. Their dependencies are optional and are not installed by
 the base BReMAP package. This adapter was exercised on Linux/WSL with CUDA;
 Geneformer currently requires CUDA, and scGPT uses an upstream Linux affinity API.
 
+**Get the checkpoint once.** Model files are not included in BReMAP. For scGPT,
+download a complete checkpoint folder from the official `model zoo
+<https://github.com/bowang-lab/scGPT#pretrained-scgpt-model-zoo>`_. It contains
+``args.json`` (configuration), ``vocab.json`` (gene vocabulary) and
+``best_model.pt`` (trained weights). Use these files from the same checkpoint;
+do not create them yourself. Set ``checkpoint`` below to that folder's actual
+location. Geneformer uses its own `official checkpoints
+<https://huggingface.co/ctheodoris/Geneformer>`_ and tokenizer assets instead.
+Count-SVD mapping and loading a saved student require no teacher checkpoint.
+
 .. code-block:: python
 
    import bremap as br

@@ -26,7 +26,7 @@ source .venv/bin/activate  # Windows PowerShell: .venv\Scripts\Activate.ps1
 python -m pip install ".[plot]"
 ```
 
-This installs BReMAP 0.6.1 from source. No PyPI release is currently claimed.
+This installs BReMAP 0.6.2 from source. No PyPI release is currently claimed.
 NumPy, SciPy, pandas, scikit-learn and AnnData are installed as dependencies.
 Neither R nor a GPU is required for count-SVD mapping or student inference.
 Student training additionally uses `.[train]`; teacher extraction needs the

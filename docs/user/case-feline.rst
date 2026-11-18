@@ -27,7 +27,7 @@ bundled with the package.
 2. Map with a fixed reference and compatible representation
 -----------------------------------------------------------------------
 
-Follow :doc:`case-workflow` using the declared reference and calibration donors.
+Follow :doc:`own-data` using the declared reference and calibration donors.
 For scGPT/Geneformer, supply cell-aligned embeddings with matching provenance
 across roles as described in :doc:`representations`. Counts are still required.
 Optional TeacherEncoder adapters can generate new vectors (see :doc:`distillation`),

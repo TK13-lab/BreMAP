@@ -66,19 +66,7 @@ Use a task-appropriate comparator to determine whether the representation helps.
 Programs and calibration
 ------------------------
 
-``cost_mode="biology"`` uses the existing combined geometry/program procedure;
-``cost_mode="embedding"`` disables the program contribution to the mapping cost.
-Program reporting remains distinct from mapping coordinates. The current
-calibration policy selects from predefined settings; changing the number of
-programs does not license tuning a configuration on the held-out endpoint.
-
-Pass ``policy="normal_donor_v1"`` explicitly when fitting. This is a historical
-identifier for the implemented donor-balanced calibration policy, **not** a rule
-that the reference must contain normal cells. Some artifact strings retain older
-wording. Calibration donors are separate from reference and query donors, and
-the reported acceptance is not a formal coverage guarantee.
-
-For a scientific comparison, retain the tested configurations, declare which
-criterion selects one, and evaluate it on samples not used for that selection.
-The :doc:`cases` show why foundation-model and mapped-coordinate performance
-should be assessed per task rather than assumed.
+``cost_mode="biology"`` combines representation and program distances;
+``cost_mode="embedding"`` uses representation distances alone. Both report RNA
+program scores. ``run_analysis`` handles the calibration policy automatically;
+provide calibration donors separate from reference and query donors.

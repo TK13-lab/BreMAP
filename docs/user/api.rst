@@ -49,6 +49,10 @@ see :doc:`input-options` for file schemas and :doc:`distillation` for encoders.
    <details><summary><strong>Individual mapping steps and evaluation</strong></summary>
 
 .. autofunction:: bremap.fit_reference
+
+   For this lower-level call, pass ``policy="normal_donor_v1"`` explicitly.
+   ``run_analysis`` supplies it automatically.
+
 .. autofunction:: bremap.calibrate
 .. autofunction:: bremap.map_query
 .. autofunction:: bremap.evaluate

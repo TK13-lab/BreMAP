@@ -74,7 +74,7 @@ so excluding PTPRC does not make the entire annotation pipeline RNA-only.
 For each held-out donor, the study used the next donor in sorted order for
 calibration and the remaining six for reference. Restrict reference/calibration
 to the declared three states; retain the documented query eligibility including
-other CD4 labels. Save each fold independently. Use :doc:`case-workflow` for
+other CD4 labels. Save each fold independently. Use :doc:`own-data` for
 input preparation, execution and output checks. Repeat for all eight query donors;
 one fold is not the published eight-donor result.
 

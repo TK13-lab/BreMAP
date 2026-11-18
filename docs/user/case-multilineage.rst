@@ -40,36 +40,31 @@ A state vocabulary and a program list need not have the same length.
 3. Prepare and run
 ------------------------------
 
-Follow :doc:`case-workflow` to save ``spec.json``, prepare the three donor-disjoint
-AnnData files and keep query annotations in ``annotations.csv``. Run:
+Use :doc:`own-data` to prepare donor-disjoint ``inputs`` with the specification
+above. Compare both methods through the package API:
 
-.. code-block:: console
+.. code-block:: python
 
-   python docs/user/examples/run_case.py --inputs case_inputs --out affinity_run --method affinity
-   python docs/user/examples/check_mapping.py affinity_run/mapping
-   python docs/user/examples/run_case.py --inputs case_inputs --out transport_run --method transport
-   python docs/user/examples/check_mapping.py transport_run/mapping
+   affinity_result = br.run_analysis(inputs, spec, "affinity_run", method="affinity")
+   transport_result = br.run_analysis(inputs, spec, "transport_run", method="transport")
+   print(affinity_result.summary())
+   print(transport_result.summary())
 
-The runner was rerun on the retained Kim immune inputs during documentation
-validation. Its complete input-check output and mapping diagnostics are shown in
-:doc:`case-workflow`. Exact paper replication requires the recorded selected-cell
-and donor manifests, which are not yet distributed as public processed inputs.
+Exact paper replication requires the recorded selected-cell and donor manifests,
+which are not distributed as public processed inputs.
 
 4. Compare methods on matching cells
 ------------------------------------------------
 
 .. code-block:: python
 
-   import pandas as pd
-
-   affinity = pd.read_csv("affinity_run/mapping/cells.csv").set_index("cell_id")
-   transport = pd.read_csv("transport_run/mapping/cells.csv").set_index("cell_id")
+   affinity = affinity_result.table("mapping").set_index("cell_id")
+   transport = transport_result.table("mapping").set_index("cell_id")
    assert set(affinity.index) == set(transport.index)
    transport = transport.loc[affinity.index]
    assert affinity.donor_id.equals(transport.donor_id)
-   for name in ["affinity_run", "transport_run"]:
-       print(name)
-       print(pd.read_csv(f"{name}/evaluation/summary.csv").to_string(index=False))
+   affinity_result.plot("coverage")
+   transport_result.plot("coverage")
 
 Do not compare Brier losses across different state vocabularies as if task
 difficulty were identical. Compare coverage and hard-label F1 as well: the Kim

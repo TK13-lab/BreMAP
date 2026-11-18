@@ -21,7 +21,7 @@ For file schemas and model options, see :doc:`input-options` and :doc:`distillat
    * - Embedding/provenance mismatch
      - Use the same encoder and extraction recipe across partitions. Student vectors need a separate student-derived reference.
    * - Checkpoint or upstream package missing
-     - Install the selected teacher's dependencies and provide its local weights; BReMAP does not download them.
+     - Download the official pretrained checkpoint; do not create model files yourself. Weights are not bundled. See :doc:`distillation`.
    * - Cache fingerprint differs
      - Inputs or encoder settings changed. Choose a new cache directory for the changed experiment.
    * - Model not calibrated
