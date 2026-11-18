@@ -3,7 +3,7 @@
 from .core import ReferenceMapper
 from .transport import transport_plan, transport_predict
 
-__version__ = "0.6.2"
+__version__ = "0.7.0"
 __all__ = ["ReferenceMapper", "transport_plan", "transport_predict"]
 
 from .specification import ReferenceSpec
@@ -36,3 +36,5 @@ from .student import StudentEncoder, evaluate_student
 __all__ += ['StudentEncoder', 'evaluate_student']
 from .teachers import TeacherEncoder
 __all__ += ['TeacherEncoder']
+from .checkpoints import list_checkpoints, download_checkpoint
+__all__ += ['list_checkpoints', 'download_checkpoint']

@@ -79,8 +79,10 @@ is not a current gene-database lookup and does not convert Ensembl IDs.
    * - custom
      - Other precomputed features with the same provenance and alignment requirements.
 
-Choosing a model does **not** download weights or run that encoder. The package
-accepts frozen vectors; raw counts remain necessary for gene programs. Encoder
+Choosing ``representation`` in ``create_spec`` does **not** download weights or
+run an encoder. Use ``TeacherEncoder.from_pretrained`` separately for confirmed
+checkpoint download and extraction (:doc:`distillation`), or supply existing
+vectors. Raw counts remain necessary for gene programs. Encoder
 identity is recorded from your declaration, not inferred from numerical vectors.
 
 .. code-block:: python

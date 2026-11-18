@@ -1,7 +1,7 @@
 Experimental teacher and student encoders
 =========================================
 
-BReMAP 0.6.0 includes optional teacher adapters and an **experimental user-trained
+BReMAP includes optional teacher adapters and an **experimental user-trained
 student API**. This is not a validated general-use student checkpoint. A student learns
 from the paired counts and teacher vectors you provide. It is not a compressed
 copy of every cell used to pretrain the foundation model.
@@ -17,8 +17,9 @@ Choose the route
 ----------------
 
 * Start with count SVD when you do not need teacher embeddings.
-* Use ``TeacherEncoder`` to generate vectors for your own dataset with an explicit
-  local scGPT or Geneformer checkpoint. No checkpoint is downloaded automatically.
+* Use ``TeacherEncoder.from_pretrained`` to select and download an official scGPT
+  or Geneformer checkpoint after confirmation, then generate your dataset's vectors.
+  Existing local checkpoints also work with ``TeacherEncoder``.
 * Use ``StudentEncoder`` when you have paired counts/teacher vectors and separate
   validation donors. Train once, save, then predict on CPU without torch.
 * Evaluate on untouched donors from the intended domain. Use another cohort when
@@ -33,15 +34,26 @@ used for that teacher. Their dependencies are optional and are not installed by
 the base BReMAP package. This adapter was exercised on Linux/WSL with CUDA;
 Geneformer currently requires CUDA, and scGPT uses an upstream Linux affinity API.
 
-**Get the checkpoint once.** Model files are not included in BReMAP. For scGPT,
-download a complete checkpoint folder from the official `model zoo
-<https://github.com/bowang-lab/scGPT#pretrained-scgpt-model-zoo>`_. It contains
-``args.json`` (configuration), ``vocab.json`` (gene vocabulary) and
-``best_model.pt`` (trained weights). Use these files from the same checkpoint;
-do not create them yourself. Set ``checkpoint`` below to that folder's actual
-location. Geneformer uses its own `official checkpoints
-<https://huggingface.co/ctheodoris/Geneformer>`_ and tokenizer assets instead.
-Count-SVD mapping and loading a saved student require no teacher checkpoint.
+**Choose a checkpoint; BReMAP downloads it for you.** Install the download helper
+once from the BReMAP checkout:
+
+.. code-block:: console
+
+   python -m pip install '.[download]'
+
+List the choices without downloading anything:
+
+.. code-block:: python
+
+   import bremap as br
+
+   br.list_checkpoints()               # All official variants supported by the adapter.
+   br.list_checkpoints("scgpt")        # Filter by model family.
+   br.list_checkpoints("geneformer")
+
+Choose one ID from ``checkpoint_id``. The next call shows the source, required
+files, destination and size when known, then asks ``Download this checkpoint?
+[y/N]``. Enter ``y`` to proceed; Enter or ``n`` cancels without network access.
 
 .. code-block:: python
 
@@ -50,9 +62,8 @@ Count-SVD mapping and loading a saved student require no teacher checkpoint.
    train = br.read_data("train_counts.h5ad", counts_layer="counts")
    validation = br.read_data("validation_counts.h5ad", counts_layer="counts")
 
-   teacher = br.TeacherEncoder(
-       model="scgpt",
-       checkpoint="models/scgpt/whole-human",
+   teacher = br.TeacherEncoder.from_pretrained(
+       "scgpt-whole-human",
        device="cuda", batch_size=32, chunk_size=256,
        max_length=1200, gene_case="exact", seed=42,
    )
@@ -60,6 +71,37 @@ Count-SVD mapping and loading a saved student require no teacher checkpoint.
    validation_vectors = teacher.transform(
        validation, cache_dir="cache/validation_teacher"
    )
+
+The checkpoint is saved in ``~/.cache/bremap/checkpoints`` (or under
+``XDG_CACHE_HOME``). Set ``cache_dir="/your/model/cache"`` in ``from_pretrained``
+to choose a different location. Verified cached files are reused without another
+download or confirmation. This checkpoint cache is separate from the per-dataset
+embedding cache passed to ``transform``.
+
+For a numbered selection menu and download only, use
+``checkpoint = br.download_checkpoint()``. To download a named checkpoint in a
+script after approving it, use
+``br.download_checkpoint("scgpt-whole-human", confirm=True)``. Omitting
+``confirm=True`` in a session that cannot accept input raises a clear error.
+``confirm=False`` cancels. No model is selected automatically for unattended runs.
+
+Files come from the official `scGPT model zoo
+<https://github.com/bowang-lab/scGPT#pretrained-scgpt-model-zoo>`_ or
+`Geneformer repository <https://huggingface.co/ctheodoris/Geneformer>`_. The download
+includes scGPT's config/vocabulary/weights or Geneformer's config/weights, not the
+entire repository. Geneformer downloads are pinned to an upstream revision and
+weights are checked against its published SHA256. Google Drive has no immutable
+revision; BReMAP checks archive integrity and records hashes for subsequent reuse.
+Upstream inference libraries and Geneformer's tokenizer assets still need the
+official package installation. Checkpoints are not bundled in the BReMAP wheel.
+
+If a checkpoint is already on disk, avoid another download:
+
+.. code-block:: python
+
+   teacher = br.TeacherEncoder("scgpt", "models/scgpt/whole-human", device="cuda")
+
+Count-SVD mapping and loading a saved student require no teacher checkpoint.
 
 Omit ``counts_layer`` when ``X`` already contains raw integer counts. Normalized
 expression and zero-library cells fail explicitly. These are local files, not
@@ -73,13 +115,12 @@ new cache directory deliberately. Do not concurrently write to one cache.
 Geneformer currently reloads its upstream extractor per chunk, so very small
 chunks add startup cost. No unmeasured speedup is promised.
 
-Geneformer uses the same API with explicit identifiers and version:
+Geneformer uses the same API; the chosen ID determines V1/V2 automatically:
 
 .. code-block:: python
 
-   teacher = br.TeacherEncoder(
-       model="geneformer", checkpoint="models/Geneformer-V2-316M",
-       model_version="V2", gene_column="ensembl_id",
+   teacher = br.TeacherEncoder.from_pretrained(
+       "geneformer-v2-316m", gene_column="ensembl_id",
        device="cuda", batch_size=4, chunk_size=256, seed=42,
    )
 

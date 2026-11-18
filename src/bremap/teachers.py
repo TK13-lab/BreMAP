@@ -22,7 +22,8 @@ class TeacherEncoder:
 
     scGPT uses CLS with the official binned-count inference helper. Geneformer
     uses mean cell pooling at layer -1, requires Ensembl IDs and explicit V1/V2.
-    No downloads and no automatic GPU-to-CPU fallback. Checkpoints must be trusted.
+    The constructor uses local files; ``from_pretrained`` can download an official
+    checkpoint after confirmation. No automatic GPU-to-CPU fallback.
     A cache belongs to one exact input/configuration; use another directory when
     changing either. Do not run concurrent writers against the same cache.
     """
@@ -47,6 +48,27 @@ class TeacherEncoder:
             model_version=model_version,seed=seed,workers=workers)
         self._bundle=None
         self._bundle_identity=None
+
+    @classmethod
+    def from_pretrained(cls, checkpoint_id, *, cache_dir=None, confirm=None, **kwargs):
+        """Select/download an official checkpoint, then construct a teacher.
+
+        See :func:`bremap.list_checkpoints` for IDs. Confirmation and verified
+        cache reuse follow :func:`bremap.download_checkpoint`. Family and
+        Geneformer V1/V2 are inferred from the selected checkpoint; conflicting
+        options fail before downloading. Other options are constructor arguments.
+        Upstream inference libraries still need to be installed separately.
+        """
+        from .checkpoints import _select, download_checkpoint
+        if checkpoint_id is None:
+            raise ValueError('from_pretrained requires a checkpoint_id; use list_checkpoints()')
+        entry = _select(checkpoint_id)
+        version = kwargs.pop('model_version', entry['model_version'])
+        if version != entry['model_version']:
+            raise ValueError('model_version conflicts with the selected checkpoint')
+        teacher = cls(entry['model'], '.', model_version=version, **kwargs)
+        teacher.checkpoint = download_checkpoint(checkpoint_id, cache_dir=cache_dir, confirm=confirm)
+        return teacher
 
     def _manifest(self):
         names=['args.json','vocab.json','best_model.pt'] if self.model=='scgpt' else ['config.json']

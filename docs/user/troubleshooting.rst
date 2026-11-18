@@ -21,7 +21,11 @@ For file schemas and model options, see :doc:`input-options` and :doc:`distillat
    * - Embedding/provenance mismatch
      - Use the same encoder and extraction recipe across partitions. Student vectors need a separate student-derived reference.
    * - Checkpoint or upstream package missing
-     - Download the official pretrained checkpoint; do not create model files yourself. Weights are not bundled. See :doc:`distillation`.
+     - Use ``TeacherEncoder.from_pretrained`` with the download extra, or provide a local checkpoint. Install the official inference package separately. See :doc:`distillation`.
+   * - Download interrupted or source unavailable
+     - Retry the same checkpoint/cache after checking the source or quota; completed files are retained. No alternative checkpoint is substituted.
+   * - Checkpoint cache corrupt or unmanaged
+     - Inspect the named directory. Remove only that checkpoint to redownload, or use another ``cache_dir``. For existing local models, use ``TeacherEncoder(model, checkpoint)``.
    * - Cache fingerprint differs
      - Inputs or encoder settings changed. Choose a new cache directory for the changed experiment.
    * - Model not calibrated

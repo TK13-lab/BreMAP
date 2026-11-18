@@ -9,7 +9,9 @@ References and programs are user-defined. Immune, stromal, epithelial and vascul
 populations can be studied when suitable reference data and validation are available.
 Use count-derived SVD or compatible precomputed embeddings, including scGPT and
 Geneformer representations. Optional TeacherEncoder adapters generate embeddings
-from your counts using local pretrained scGPT/Geneformer checkpoints. StudentEncoder
+from your counts using pretrained scGPT/Geneformer checkpoints. Select an official
+checkpoint with `TeacherEncoder.from_pretrained`; BReMAP asks before downloading
+and reuses its verified cache. Existing local checkpoints also work. StudentEncoder
 trains a compact model from paired counts and teacher vectors for your own task.
 Foundation models are optional; no foundation-model retraining or universal student
 checkpoint is required or claimed.
@@ -26,11 +28,12 @@ source .venv/bin/activate  # Windows PowerShell: .venv\Scripts\Activate.ps1
 python -m pip install ".[plot]"
 ```
 
-This installs BReMAP 0.6.2 from source. No PyPI release is currently claimed.
+This installs BReMAP 0.7.0 from source. No PyPI release is currently claimed.
 NumPy, SciPy, pandas, scikit-learn and AnnData are installed as dependencies.
 Neither R nor a GPU is required for count-SVD mapping or student inference.
 Student training additionally uses `.[train]`; teacher extraction needs the
-upstream encoder environment and checkpoint. Geneformer extraction requires CUDA.
+upstream encoder environment and checkpoint. Add `.[download]` to enable confirmed
+checkpoint downloads. Geneformer extraction requires CUDA.
 
 ## Run the tutorial
 

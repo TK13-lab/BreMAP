@@ -22,6 +22,8 @@ jobs:
         run: python -m unittest discover -s tests -p 'test_bremap_usability.py'
       - name: Test teacher cache integrity without upstream models
         run: python -m unittest discover -s tests -p 'test_teacher_encoder.py'
+      - name: Test checkpoint selection, consent and cache integrity offline
+        run: python -m unittest discover -s tests -p 'test_checkpoint_downloads.py'
       - name: Exercise installed package and reusable reference
         run: python -I docs/user/examples/quickstart.py --out "$RUNNER_TEMP/bremap-quickstart"
       - name: Check tutorial mapping output

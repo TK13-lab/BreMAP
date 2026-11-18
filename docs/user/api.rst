@@ -38,7 +38,9 @@ see :doc:`input-options` for file schemas and :doc:`distillation` for encoders.
    <details><summary><strong>Teacher and experimental student encoders</strong></summary>
 
 .. autoclass:: bremap.TeacherEncoder
-   :members: transform, attach
+   :members: from_pretrained, transform, attach
+.. autofunction:: bremap.list_checkpoints
+.. autofunction:: bremap.download_checkpoint
 .. autoclass:: bremap.StudentEncoder
    :members: fit, transform, attach, save, load, fingerprint
 .. autofunction:: bremap.evaluate_student
