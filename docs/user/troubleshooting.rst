@@ -11,7 +11,7 @@ For file schemas and model options, see :doc:`input-options` and :doc:`distillat
    * - Problem
      - Action
    * - Invalid counts
-     - Load raw integer counts, using ``counts_layer`` if needed. Do not round normalized expression.
+     - Select counts with ``counts_layer`` or declare the known ``expression_type``; see :doc:`processed-inputs`. Do not round values.
    * - Missing metadata or state labels
      - Check column names and the declared state vocabulary. Reference and calibration require known-state labels.
    * - Donor/cell overlap
@@ -44,3 +44,15 @@ For file schemas and model options, see :doc:`input-options` and :doc:`distillat
 For unresolved errors, open a `GitHub issue
 <https://github.com/TK13-lab/BreMAP/issues>`_ with the package/Python versions,
 exact error and a small reproducible example.
+
+Processed-input errors
+-----------------------
+
+* Missing layer: use ``inspect_data`` and select the exact matrix/assay name.
+* Processing mismatch: fit a separate compatible reference/student; do not relabel
+  residuals to make a count-trained artifact accept them.
+* RDS dependency missing: install ``.[rds]`` from the source checkout; R is not required.
+* Unsupported delayed/external matrix: export an in-memory assay or H5AD from the
+  originating workflow. Large RDS objects are not streamed.
+* Inverse-log overflow: verify the log base and transformation; scaled expression
+  is not automatically log1p library-normalized expression.

@@ -3,7 +3,7 @@ Experimental teacher and student encoders
 
 BReMAP includes optional teacher adapters and an **experimental user-trained
 student API**. This is not a validated general-use student checkpoint. A student learns
-from the paired counts and teacher vectors you provide. It is not a compressed
+from the paired expression and teacher vectors you provide. It is not a compressed
 copy of every cell used to pretrain the foundation model.
 
 The intended use is a **student tailored to your data and task**. One successful
@@ -20,13 +20,13 @@ Choose the route
 * Use ``TeacherEncoder.from_pretrained`` to select and download an official scGPT
   or Geneformer checkpoint after confirmation, then generate your dataset's vectors.
   Existing local checkpoints also work with ``TeacherEncoder``.
-* Use ``StudentEncoder`` when you have paired counts/teacher vectors and separate
+* Use ``StudentEncoder`` when you have paired expression/teacher vectors and separate
   validation donors. Train once, save, then predict on CPU without torch.
 * Evaluate on untouched donors from the intended domain. Use another cohort when
   claiming cross-cohort transfer, rather than for every scoped application.
 
-1. Load counts and generate teacher vectors
--------------------------------------------
+1. Load expression and generate teacher vectors
+-----------------------------------------------
 
 Install BReMAP from the source checkout with ``pip install '.[train]'`` for student
 training. Install the official scGPT or Geneformer package in the environment
@@ -63,7 +63,7 @@ files, destination and size when known, then asks ``Download this checkpoint?
    validation = br.read_data("validation_counts.h5ad", counts_layer="counts")
 
    teacher = br.TeacherEncoder.from_pretrained(
-       "scgpt-whole-human",
+       "scgpt-whole-human", data=train,
        device="cuda", batch_size=32, chunk_size=256,
        max_length=1200, gene_case="exact", seed=42,
    )
@@ -103,9 +103,19 @@ If a checkpoint is already on disk, avoid another download:
 
 Count-SVD mapping and loading a saved student require no teacher checkpoint.
 
-Omit ``counts_layer`` when ``X`` already contains raw integer counts. Normalized
-expression and zero-library cells fail explicitly. These are local files, not
-uploads to an external service. Donor metadata must be present in ``obs``.
+Omit ``counts_layer`` when ``X`` contains counts. For normalized-only data, load
+with ``expression_type="library_normalized"`` or ``"log1p_library_normalized"``;
+see :doc:`processed-inputs`. BReMAP uses relative expression, never reconstructed
+integer counts. The Geneformer upstream contract requests raw counts; this is a
+separately tested BReMAP adapter route, not upstream certification. Keep genes,
+processing and checkpoint consistent; numerical ties/precision can affect vectors.
+
+Arbitrary integrated/residual expression is rejected by teachers. Supplying
+``data=train`` to the factory validates expression before checkpoint download;
+otherwise validation happens at ``transform``. Students can fit declared
+``preprocessed`` expression paired with compatible supplied teacher vectors, and
+store/check that processing contract at inference. Zero-expression cells fail.
+These files remain local, with donor metadata in ``obs``.
 
 The return value is a cell-indexed DataFrame, not a positional array. Completed
 chunks are reused after interruption. Changed counts, cell IDs, gene identifiers,

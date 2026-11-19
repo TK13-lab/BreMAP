@@ -1,6 +1,7 @@
 """Optional plotting of saved results; no fitting, relabeling or outcome selection."""
 import numpy as np
 import pandas as pd
+import json
 
 
 def plot_result(result, kind, *, x=None, y=None, annotations=None, group_by=None, save=None):
@@ -41,7 +42,8 @@ def plot_result(result, kind, *, x=None, y=None, annotations=None, group_by=None
             rejected = valid & ~group.accepted
             ax.scatter(group.loc[rejected,x],group.loc[rejected,y], marker='x',s=120,color='black')
         ax.scatter([],[],marker='x',s=80,color='black',label='Rejected')
-        ax.set(xlabel=f'{x} program (mean log1p CP10k)', ylabel=f'{y} program (mean log1p CP10k)')
+        units = json.loads((result.path/'workflow.json').read_text()).get('program_units','mean log1p(CP10k)')
+        ax.set(xlabel=f'{x} program ({units})', ylabel=f'{y} program ({units})')
         ax.legend(loc='upper center',bbox_to_anchor=(.5,1.22),fontsize=9,ncol=2,frameon=False)
     elif kind == 'affinity':
         columns = [c for c in cells if c.startswith('conditional_affinity::')]

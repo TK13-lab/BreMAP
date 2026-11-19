@@ -5,6 +5,7 @@ from pathlib import Path
 import re
 
 from .core import _identifiers
+from .expression import CANONICAL, validate_contract, check_contract
 
 
 @dataclass(frozen=True)
@@ -42,13 +43,17 @@ class ReferenceSpec:
             raise ValueError('Spec reference requires source and eligibility descriptions')
         if data.get('cost_mode') not in ('biology', 'embedding'):
             raise ValueError('Spec cost_mode must be biology or embedding')
-        if data.get('normalization') != 'CP10k_log1p_on_reference_gene_universe':
-            raise ValueError('Unsupported normalization/feature-universe policy')
+        contract = data.get('expression_contract', {'normalization': CANONICAL})
+        validate_contract(contract)
+        if data.get('normalization') != contract['normalization']:
+            raise ValueError('Normalization does not match expression processing contract')
         representation = data.get('representation', {})
-        if not isinstance(representation, dict) or representation.get('kind') not in ('raw_svd', 'frozen_embedding'):
+        if not isinstance(representation, dict) or representation.get('kind') not in ('raw_svd', 'provided_svd', 'frozen_embedding'):
             raise ValueError('Unsupported representation kind')
-        if representation['kind'] == 'raw_svd' and 'key' in representation:
+        if representation['kind'] in ('raw_svd','provided_svd') and 'key' in representation:
             raise ValueError('raw_svd representation cannot declare an embedding key')
+        if representation['kind'] != 'frozen_embedding' and ((representation['kind']=='provided_svd') != (contract['normalization']=='provided_expression')):
+            raise ValueError('SVD kind must match expression normalization')
         if representation['kind'] == 'frozen_embedding' and (not isinstance(representation.get('key'), str) or not representation['key'].strip()):
             raise ValueError('Frozen embedding representation requires a key')
         if 'encoder' in representation:
@@ -86,6 +91,7 @@ class ReferenceSpec:
             if identity.get(key) != self.data[key]:
                 raise ValueError(f'H5AD {key} does not match the reference specification')
         validate_gene_symbols(data.var_names)
+        check_contract(data, self.data.get('expression_contract', {'normalization': CANONICAL}))
         rep = self.data['representation']
         if 'encoder' in rep:
             metadata = data.uns.get('bremap_encoder_metadata', {}).get(rep['key'], {})

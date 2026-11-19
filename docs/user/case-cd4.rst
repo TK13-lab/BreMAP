@@ -11,7 +11,8 @@ Source accession: `GSE164378 <https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc
 The retained analysis used the Hao PBMC CITE-seq 20k derivative, selected baseline
 CD4 cells and retained 1,548 cells across eight donors. Counts, source annotations,
 visit/donor metadata and matched antibody counts are required. The original
-processed object is Seurat/RDS; convert its raw RNA and ADT counts to cell-aligned
+processed object is Seurat/RDS. BReMAP can read its RNA assay directly (see
+:doc:`processed-inputs`); the historical case converted RNA and ADT counts to cell-aligned
 tables/AnnData before using Python BReMAP. Do not use its normalized RNA slot as counts.
 The public package does not currently distribute this conversion or the prepared cohort.
 

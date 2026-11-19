@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "bremap"
-version = "0.7.0"
+version = "0.8.0"
 description = "Configurable reference mapping with gene programs and reusable frozen representations"
 readme = "docs/user/README.md"
 license = "MIT"
@@ -16,6 +16,7 @@ dependencies = ["numpy>=1.24", "scipy>=1.10", "pandas>=2.0", "scikit-learn>=1.3"
 plot = ["matplotlib>=3.7"]
 train = ["torch>=2.0"]
 download = ["gdown>=5.2,<6", "huggingface_hub>=0.26,<2"]
+rds = ["rdata>=1.1,<2"]
 
 [project.urls]
 Documentation = "https://bremap.readthedocs.io/en/stable/"

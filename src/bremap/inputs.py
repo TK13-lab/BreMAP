@@ -14,7 +14,8 @@ def prepare_input(source, spec, destination, *, role='query', cell_ids=None,
     """Copy selected data, declare spec identity, validate, and save an H5AD.
 
     The caller declares tissue/state eligibility; this function does not infer it.
-    X must contain raw integer counts. Supplied embeddings/provenance stay in the
+    X must contain counts or explicitly declared compatible expression from read_data.
+    Supplied embeddings/provenance stay in the
     AnnData. Source objects/files are never modified and existing outputs are refused.
     """
     spec = spec if isinstance(spec, ReferenceSpec) else ReferenceSpec.load(spec)

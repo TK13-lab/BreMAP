@@ -16,6 +16,7 @@ from .legacy import _versions, _write_json
 from .preprocessing import file_hash
 from .resources_io import import_reference, export_reference
 from .specification import ReferenceSpec
+from .expression import CANONICAL, score_units
 
 
 def _recipe(recipe, base_dir=None):
@@ -199,13 +200,15 @@ def run_workflow(recipe, *, out_dir=None, overwrite=False, base_dir=None):
                       recipe_origin='json_file' if path is not None else 'python_mapping',
                       inputs=input_hashes, output=str(out),
                       representation=meta['representation'], method=meta['method'], states=meta['classes'],
+                      expression_contract=meta.get('expression_contract', {'normalization': CANONICAL}),
+                      program_units=score_units(meta.get('expression_contract', {'normalization': CANONICAL})),
                       n_cells=len(cells), n_donors=cells.donor_id.nunique(),
                       acceptance=float(cells.accepted.mean()), stages=stages,
                       wall_seconds=time.perf_counter()-started, process_peak_rss_kib=rss,
                       memory_definition='Process-lifetime peak RSS; isolate one run per process for comparison.',
                       versions=_versions(), code_sha256={p.name: file_hash(p) for p in Path(__file__).parent.glob('*.py')},
                       limits=['Reference resemblance is not lineage ancestry or functional ground truth.',
-                              'Programs are mean log-expression on the frozen reference gene universe.',
+                              'Program units follow the declared expression contract on the frozen reference gene universe.',
                               'No automatic encoder download/training or outcome-driven recipe selection.',
                               'Underlying build-time temporary paths are provenance, not artifact lookup paths.'])
         (stage/'report.md').write_text(

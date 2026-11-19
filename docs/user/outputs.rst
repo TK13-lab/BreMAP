@@ -26,7 +26,7 @@ its output path. The composed workflow places them under ``mapping/``.
    * - ``reject_mass``
      - Unresolved mass for transport; not a new cell type.
    * - ``abstention_reason``, ``qc_zero_library``
-     - Diagnostic reason for non-acceptance and zero-count-cell flag.
+     - Diagnostic reason for non-acceptance and zero-expression-row flag (historical column name).
 
 Do not replace missing scores for zero-library cells with biological zeros.
 Report the denominator for any summary: all query cells, scored cells or accepted
@@ -40,7 +40,9 @@ Program profiles
 ``run_workflow`` writes one row per cell in ``programs/cells.csv`` and a long-form
 donor table in ``programs/donors.csv``. The latter contains ``donor_id``, ``program``,
 ``n_cells``, ``n_scored``, ``mean`` and ``sd``. Scores use mean log1p(CP10k) expression
-on the frozen reference gene universe. The SD is the population SD (``ddof=0``),
+on the frozen reference gene universe for counts/library-derived inputs. In
+``preprocessed`` mode they are means in the declared units; ``workflow.json``
+records ``expression_contract`` and ``program_units``. The SD is the population SD (``ddof=0``),
 not an uncertainty interval for the donor mean.
 
 These program summaries include score-defined cells regardless of mapping

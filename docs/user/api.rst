@@ -8,7 +8,8 @@ see :doc:`input-options` for file schemas and :doc:`distillation` for encoders.
 
    <details><summary><strong>Inputs and specifications</strong></summary>
 
-.. autofunction:: bremap.usability.read_data
+.. autofunction:: bremap.data_io.read_data
+.. autofunction:: bremap.inspect_data
 .. autofunction:: bremap.usability.load_example
 .. autofunction:: bremap.usability.example_annotations
 .. autofunction:: bremap.usability.describe_data

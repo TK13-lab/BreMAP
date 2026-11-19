@@ -15,11 +15,13 @@ jobs:
         with:
           python-version: '3.12'
       - name: Install package and documentation dependencies
-        run: python -m pip install ".[plot]" -r docs/user/requirements.txt
+        run: python -m pip install ".[plot,rds]" -r docs/user/requirements.txt
       - name: Test input guards and plotting APIs
         env:
           MPLBACKEND: Agg
         run: python -m unittest discover -s tests -p 'test_bremap_usability.py'
+      - name: Check native RDS fixtures without R runtime
+        run: python -m unittest discover -s tests -p 'test_bremap_rds.py'
       - name: Test teacher cache integrity without upstream models
         run: python -m unittest discover -s tests -p 'test_teacher_encoder.py'
       - name: Test checkpoint selection, consent and cache integrity offline
@@ -46,9 +48,16 @@ jobs:
       - name: Install CPU student dependencies
         run: |
           python -m pip install torch --index-url https://download.pytorch.org/whl/cpu
-          python -m pip install .
+          python -m pip install ".[plot,rds]"
       - name: Check student portability, validation and task decisions
         env:
           OPENBLAS_NUM_THREADS: '2'
           OMP_NUM_THREADS: '2'
         run: python -m unittest discover -s tests -p 'test_student_encoder.py'
+
+      - name: Check processed expression contracts end to end
+        env:
+          OPENBLAS_NUM_THREADS: '2'
+          OMP_NUM_THREADS: '2'
+          MPLBACKEND: Agg
+        run: python -m unittest discover -s tests -p 'test_bremap_processed.py'

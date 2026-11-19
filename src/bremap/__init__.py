@@ -3,7 +3,7 @@
 from .core import ReferenceMapper
 from .transport import transport_plan, transport_predict
 
-__version__ = "0.7.0"
+__version__ = "0.8.0"
 __all__ = ["ReferenceMapper", "transport_plan", "transport_predict"]
 
 from .specification import ReferenceSpec
@@ -21,10 +21,10 @@ from .resources_io import export_reference, import_reference, export_embeddings
 __all__ += ['read_gene_programs', 'create_spec', 'inspect_input',
             'export_reference', 'import_reference', 'export_embeddings']
 
-from .usability import (read_data, load_example, example_annotations, describe_data,
+from .usability import (read_data, inspect_data, load_example, example_annotations, describe_data,
                         prepare_partitions, WorkflowResult, run_analysis)
 from .inputs import prepare_input
-__all__ += ['read_data', 'load_example', 'example_annotations', 'describe_data',
+__all__ += ['read_data', 'inspect_data', 'load_example', 'example_annotations', 'describe_data',
             'prepare_partitions', 'WorkflowResult', 'run_analysis', 'prepare_input']
 from .usability import apply_reference, compare_measurement
 __all__ += ['apply_reference', 'compare_measurement']

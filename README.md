@@ -7,12 +7,12 @@ and export reusable reference resources in one reproducible workflow.
 
 References and programs are user-defined. Immune, stromal, epithelial and vascular
 populations can be studied when suitable reference data and validation are available.
-Use count-derived SVD or compatible precomputed embeddings, including scGPT and
+Use expression-derived SVD or compatible precomputed embeddings, including scGPT and
 Geneformer representations. Optional TeacherEncoder adapters generate embeddings
-from your counts using pretrained scGPT/Geneformer checkpoints. Select an official
+from declared counts/library-normalized expression using pretrained scGPT/Geneformer checkpoints. Select an official
 checkpoint with `TeacherEncoder.from_pretrained`; BReMAP asks before downloading
 and reuses its verified cache. Existing local checkpoints also work. StudentEncoder
-trains a compact model from paired counts and teacher vectors for your own task.
+trains a compact model from paired expression and teacher vectors for your own task.
 Foundation models are optional; no foundation-model retraining or universal student
 checkpoint is required or claimed.
 
@@ -28,7 +28,7 @@ source .venv/bin/activate  # Windows PowerShell: .venv\Scripts\Activate.ps1
 python -m pip install ".[plot]"
 ```
 
-This installs BReMAP 0.7.0 from source. No PyPI release is currently claimed.
+This installs BReMAP 0.8.0 from source. No PyPI release is currently claimed.
 NumPy, SciPy, pandas, scikit-learn and AnnData are installed as dependencies.
 Neither R nor a GPU is required for count-SVD mapping or student inference.
 Student training additionally uses `.[train]`; teacher extraction needs the
@@ -85,3 +85,9 @@ not yet been assigned.
 BReMAP code is released under the [MIT License](https://github.com/TK13-lab/BreMAP/blob/main/LICENSE).
 Report bugs with a minimal synthetic example at
 [GitHub Issues](https://github.com/TK13-lab/BreMAP/issues).
+
+
+Processed AnnData and Seurat/SCE RDS are supported through `inspect_data` and
+`read_data`; normalized-only inputs do not require fabricated counts. Install
+`.[rds]` from the checkout for the Python RDS reader (no R runtime). Declare the
+matrix semantics explicitly and see the [processed-input tutorial](https://bremap.readthedocs.io/en/stable/processed-inputs.html).

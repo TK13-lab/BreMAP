@@ -2,9 +2,9 @@ Choose input files, gene programs and representations
 ======================================================================
 
 BReMAP receives local paths or Python data objects. It does not upload your data
-to a server. These options are included in BReMAP 0.6.0. Reading a file never certifies its biological suitability.
+to a server. Processed-input options are available since BReMAP 0.8.0. Reading a file never certifies its biological suitability.
 
-1. Load counts explicitly
+1. Select expression explicitly
 ------------------------------------------------------------
 
 .. code-block:: python
@@ -20,9 +20,13 @@ to a server. These options are included in BReMAP 0.6.0. Reading a file never ce
 
 Choose one loader call. H5AD uses X if counts_layer is omitted; a named layer must
 exist. CSV/TSV requires explicit metadata_columns so patient numbers cannot be
-silently treated as gene counts. Counts must be finite, nonnegative integers;
-normalized data must not be repaired by rounding. Unsupported formats, absent
-files/layers, duplicate cell IDs and invalid values produce errors.
+silently treated as genes. Counts must be finite, nonnegative integers.
+
+For a processed object without counts, use ``inspect_data`` and explicitly choose
+``expression_type="library_normalized"``, ``"log1p_library_normalized"`` or
+``"preprocessed"``. Seurat/SCE RDS uses the optional ``rds`` extra, with no R runtime.
+See :doc:`processed-inputs` for selection, complete examples and compatibility
+limits. Do not round normalized values or infer semantics from a slot name.
 
 2. Supply your programs
 ------------------------------------------------------------
@@ -62,7 +66,7 @@ identifiers are rejected with the file/program name. Shared genes across differe
 programs are allowed and reported as a warning. The loader validates syntax; it
 is not a current gene-database lookup and does not convert Ensembl IDs.
 
-3. Choose counts or precomputed model features
+3. Choose expression SVD or precomputed model features
 ------------------------------------------------------------
 
 .. list-table:: create_spec representation options
@@ -71,7 +75,7 @@ is not a current gene-database lookup and does not convert Ensembl IDs.
    * - representation
      - Required inputs
    * - svd
-     - Raw counts; omit embedding_key. SVD is fitted on the reference.
+     - Declared compatible expression; omit embedding_key. SVD is fitted on the reference.
    * - scgpt
      - Precomputed scGPT vectors, embedding_key, declared checkpoint/preprocessing.
    * - geneformer
@@ -82,7 +86,7 @@ is not a current gene-database lookup and does not convert Ensembl IDs.
 Choosing ``representation`` in ``create_spec`` does **not** download weights or
 run an encoder. Use ``TeacherEncoder.from_pretrained`` separately for confirmed
 checkpoint download and extraction (:doc:`distillation`), or supply existing
-vectors. Raw counts remain necessary for gene programs. Encoder
+vectors. Compatible expression remains necessary for gene programs. Encoder
 identity is recorded from your declaration, not inferred from numerical vectors.
 
 .. code-block:: python
@@ -114,7 +118,7 @@ Use the same checkpoint, preprocessing and dimension ordering across partitions.
        reference_source="My source accession and selection criteria",
        eligibility="My eligible population and donor split",
        representation="scgpt", embedding_key="X_scgpt",
-       minimum_genes_per_anchor=2,
+       minimum_genes_per_anchor=2, expression=data,
    )
    inputs = br.prepare_partitions(
        data, spec, "prepared",

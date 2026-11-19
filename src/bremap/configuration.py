@@ -7,7 +7,7 @@ import numpy as np
 
 from .core import _identifiers
 from .legacy import _embedding
-from .preprocessing import normalize_counts
+from .expression import effective_contract, features, zero_rows, CANONICAL, get_declaration
 from .specification import ReferenceSpec, validate_gene_symbols
 
 
@@ -79,7 +79,7 @@ def read_gene_programs(path, *, program_name=None):
 def create_spec(*, spec_id, tissue, states, programs, reference_source, eligibility,
                 spec_version='1.0', donor_column='donor_id', label_column='state',
                 study_column=None, embedding_key=None, representation=None, program_name=None, cost_mode='biology',
-                minimum_genes_per_anchor=1, heldout_validation=None):
+                minimum_genes_per_anchor=1, heldout_validation=None, expression=None):
     """Construct a custom human gene-symbol spec for the existing mapper."""
     if isinstance(programs, (str, Path)):
         programs = read_gene_programs(programs, program_name=program_name)
@@ -91,7 +91,9 @@ def create_spec(*, spec_id, tissue, states, programs, reference_source, eligibil
         raise ValueError("svd cannot use embedding_key; omit it to fit count SVD")
     if representation in ("scgpt", "geneformer", "custom") and not embedding_key:
         raise ValueError(f"{representation} requires embedding_key for precomputed embeddings. Use attach_embeddings or an experimental encoder's attach method before creating the specification.")
-    rep = {"kind":"raw_svd"} if embedding_key is None else {"kind":"frozen_embedding", "key":embedding_key}
+    contract = {'normalization': CANONICAL} if expression is None else effective_contract(expression)
+    svd_kind = 'provided_svd' if contract['normalization'] == 'provided_expression' else 'raw_svd'
+    rep = {"kind":svd_kind} if embedding_key is None else {"kind":"frozen_embedding", "key":embedding_key}
     if representation in ("scgpt", "geneformer", "custom"):
         rep["encoder"] = representation
     return ReferenceSpec.from_dict({
@@ -102,7 +104,7 @@ def create_spec(*, spec_id, tissue, states, programs, reference_source, eligibil
         'programs': {'anchors': _programs(programs), 'heldout_validation': {} if heldout_validation is None else heldout_validation,
                      'minimum_genes_per_anchor': minimum_genes_per_anchor},
         'representation': rep,
-        'cost_mode': cost_mode, 'normalization': 'CP10k_log1p_on_reference_gene_universe'})
+        'cost_mode': cost_mode, 'normalization': contract['normalization'], 'expression_contract': contract})
 
 
 def inspect_input(path, spec, role='query'):
@@ -141,9 +143,10 @@ def inspect_input(path, spec, role='query'):
     logs = None
     try:
         if a.X is None:
-            raise ValueError('Raw integer counts in X are required')
-        logs = normalize_counts(a.X)
-        zero = int((np.asarray(logs.sum(axis=1)).ravel() == 0).sum())
+            raise ValueError('Expression in X is required; select the source matrix with read_data')
+        logs = features(a)
+        result['expression'] = get_declaration(a)
+        zero = int(zero_rows(logs).sum())
         result['zero_library_cells'] = zero
         if zero:
             (warnings if role == 'query' else errors).append(f'{zero} zero-library cells; query cells will abstain')

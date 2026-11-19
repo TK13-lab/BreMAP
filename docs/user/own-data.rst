@@ -1,7 +1,7 @@
 Use your own data
 =================
 
-See :doc:`input-options` for count files, model choices, custom program files and
+See :doc:`input-options` for expression files, model choices, custom program files and
 validation errors.
 
 Start with the question
@@ -16,7 +16,7 @@ baseline population. It need not be normal epithelium.
 The current mapper requires at least two discrete, declared reference states.
 Gene programs need not correspond one-to-one to those states. Overlapping program
 genes are allowed but reported; a program is a positive gene list scored by mean
-log-expression, not a signed regulatory network or a newly inferred pathway.
+log1p(CP10k) expression, or supplied units in preprocessed mode. It is not a signed regulatory network or a newly inferred pathway.
 
 Prepare the biological partitions
 ---------------------------------
@@ -42,7 +42,7 @@ Input contract
    * - AnnData field
      - Required content
    * - ``X``
-     - Raw, nonnegative integer counts; sparse or dense. Not log-normalized or scaled expression.
+     - Counts or explicitly declared processed expression, loaded with read_data; sparse or dense.
    * - ``obs_names``
      - Unique, nonempty cell identifiers, disjoint across roles.
    * - ``var_names``
@@ -54,10 +54,11 @@ Input contract
    * - ``obsm[embedding_key]``
      - Optional cell-aligned frozen vectors; see :doc:`representations` for provenance requirements.
 
-If your counts are stored in ``layers["counts"]``, first create an AnnData copy
-and assign that layer to its ``X``. Merely renaming a normalized matrix does not
-restore counts. The package performs its own CP10k/log1p normalization on the
-frozen reference gene universe.
+Use ``br.read_data("cells.h5ad", counts_layer="counts")`` to select a count layer.
+For normalized-only AnnData/Seurat/SCE, follow :doc:`processed-inputs`. Bind the
+returned declaration with ``create_spec(..., expression=data)``. Canonical inputs
+use CP10k/log1p on the reference gene universe; as-supplied processed expression
+retains its declared units.
 
 Define your specification
 -------------------------

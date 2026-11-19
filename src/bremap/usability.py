@@ -12,49 +12,7 @@ from .specification import ReferenceSpec
 from .workflow import run_workflow
 
 
-def read_data(source, *, metadata_columns=None, cell_id='cell_id', counts_layer=None):
-    """Read raw-count H5AD/AnnData or a CSV with explicitly declared metadata columns.
-
-    CSV rows are cells; remaining columns are genes. No normalization, donor
-    splitting, gene conversion or missing-value imputation is performed.
-    """
-    if isinstance(source,(str,Path)):
-        source=Path(source)
-        if not source.is_file():
-            raise FileNotFoundError(f"Input file not found: {source}. Supply an existing local count file.")
-        if source.suffix.lower() not in ('.h5ad','.csv','.tsv'):
-            raise ValueError('Unsupported input file format. Use .h5ad, .csv or .tsv; Excel and normalized matrices are not accepted.')
-    if isinstance(source, ad.AnnData):
-        data = source.copy()
-    elif isinstance(source, (str, Path)) and Path(source).suffix.lower() == '.h5ad':
-        data = ad.read_h5ad(source)
-    else:
-        if not metadata_columns:
-            raise ValueError('CSV requires explicit metadata_columns')
-        frame = pd.read_csv(source, sep='\t' if isinstance(source,Path) and source.suffix.lower()=='.tsv' else ',', dtype={cell_id: str})
-        required = [cell_id, *metadata_columns]
-        if len(set(required)) != len(required) or not set(required) <= set(frame):
-            raise ValueError('Missing or repeated cell ID/metadata columns')
-        if frame[cell_id].isna().any() or frame[cell_id].duplicated().any():
-            raise ValueError('Cell IDs must be present and unique')
-        frame = frame.set_index(cell_id)
-        counts = frame.drop(columns=metadata_columns)
-        if not len(counts.columns):
-            raise ValueError('No gene columns')
-        data = ad.AnnData(counts.to_numpy(dtype=float), obs=frame[list(metadata_columns)].copy(),
-                         var=pd.DataFrame(index=counts.columns))
-    if counts_layer is not None:
-        if counts_layer not in data.layers:
-            raise ValueError('Missing counts layer: ' + counts_layer)
-        data.X = data.layers[counts_layer].copy()
-    if data.X is None:
-        raise ValueError('No count matrix in X; select an existing raw layer with counts_layer=')
-    values = data.X.data if hasattr(data.X, 'tocsr') else np.asarray(data.X)
-    if not np.isfinite(values).all() or (values < 0).any() or not np.equal(values, np.rint(values)).all():
-        raise ValueError('Raw finite nonnegative integer counts required')
-    if not data.n_obs or not data.n_vars or not data.obs_names.is_unique or not data.var_names.is_unique:
-        raise ValueError('Nonempty data with unique cell and gene IDs required')
-    return data
+from .data_io import read_data, inspect_data
 
 
 def load_example():

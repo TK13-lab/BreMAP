@@ -13,6 +13,7 @@ from sklearn.decomposition import TruncatedSVD
 from sklearn.metrics import f1_score
 
 from .preprocessing import normalize_counts
+from .expression import values as expression_values, features, effective_contract, check_contract, CANONICAL, zero_rows, get_declaration
 
 
 def _ids(values, name):
@@ -37,14 +38,17 @@ def _counts(data, gene_case):
     if gene_case not in ('exact', 'upper'):
         raise ValueError('gene_case must be exact or upper')
     if gene_case == 'upper': genes = _ids(genes.str.upper(), 'uppercase gene')
-    x = sparse.csr_matrix(data.X, dtype=np.float32)
-    if not np.isfinite(x.data).all() or (x.data < 0).any():
-        raise ValueError('Counts must be finite and nonnegative')
-    if not np.allclose(x.data, np.round(x.data), rtol=0, atol=1e-5):
-        raise ValueError('Provide raw integer counts, not normalized expression')
-    if not data.n_obs or not data.n_vars or (np.asarray(x.sum(1)).ravel() <= 0).any():
-        raise ValueError('Empty input or zero-library cells; remove them explicitly')
+    x = expression_values(data).astype(np.float32)
+    if not np.isfinite(x.data).all():
+        raise ValueError('Expression exceeds float32 numeric range for the student')
+    if not data.n_obs or not data.n_vars or zero_rows(x).any():
+        raise ValueError('Empty input or zero-expression cells; remove them explicitly')
     return x, genes
+
+
+def _features(data, x):
+    # Preserve historical float32-count conversion before float64 normalization.
+    return (normalize_counts(x) if get_declaration(data)['type']=='counts' else features(data)).astype(np.float32)
 
 
 def _digest(data, matrix=None):
@@ -62,7 +66,7 @@ def _digest(data, matrix=None):
 class StudentEncoder:
     """Frozen feature selection + SVD + ReLU MLP predicting one teacher's vectors.
 
-    Train with paired counts/vectors and donor-disjoint validation. This is an
+    Train with paired declared expression/vectors and donor-disjoint validation. This is an
     experimental surrogate, not a pretrained foundation model. Build a separate
     BReMAP reference with its vectors; never mix teacher and student partitions.
     """
@@ -117,6 +121,8 @@ class StudentEncoder:
             raise ValueError('Train/validation donor overlap; namespace studies and split donors first')
         if set(train.obs_names) & set(validation.obs_names): raise ValueError('Train/validation cell overlap')
         x, genes = _counts(train,gene_case)
+        contract = effective_contract(train)
+        check_contract(validation, contract)
         # Canonical column-major targets make column statistics independent of
         # DataFrame/CSV memory layout and preserve the historical CSV fit path.
         y = np.asfortranarray(_aligned(teacher, train.obs_names, 'teacher'), dtype=np.float32)
@@ -127,7 +133,7 @@ class StudentEncoder:
             raise ValueError('Teacher embedding columns must match in the same order')
         if float(np.var(y,axis=0).sum()) < 1e-12: raise ValueError('Teacher vectors are constant; cannot distill variation')
         if train.n_obs < 3 or train.n_vars < 3: raise ValueError('At least three training cells/genes required')
-        log = normalize_counts(x).astype(np.float32)
+        log = _features(train, x)
         variance = np.asarray(log.power(2).mean(0)).ravel()-np.asarray(log.mean(0)).ravel()**2
         ix = np.argsort(-variance,kind='stable')[:min(n_genes,len(genes))]
         svd = TruncatedSVD(n_components=min(n_components,len(ix)-1,train.n_obs-1),random_state=seed)
@@ -142,6 +148,8 @@ class StudentEncoder:
                     parameters=dict(n_genes=n_genes,n_components=n_components,hidden_size=hidden_size,
                         epochs=epochs,batch_size=batch_size,learning_rate=learning_rate,loss=loss,
                         relational_weight=relational_weight,seed=seed), history=[])
+        if contract['normalization'] != CANONICAL:
+            meta['expression_contract'] = contract
         obj = cls(genes[ix].to_numpy(dtype=str),svd.components_,z.mean(0),np.maximum(z.std(0),1e-6),
                   [],[],y.mean(0),np.maximum(y.std(0),1e-6),meta)
         z = ((z-obj.input_mean)/obj.input_scale).astype(np.float32)
@@ -187,12 +195,13 @@ class StudentEncoder:
         return obj
 
     def _project(self, data):
+        check_contract(data,self.metadata.get('expression_contract', {'normalization':CANONICAL}))
         x, genes = _counts(data,self.metadata['gene_case'])
         ix=genes.get_indexer(self.genes); present=ix>=0; fraction=float(present.mean())
         if fraction < self.metadata['minimum_gene_fraction']:
             raise ValueError(f'Student gene coverage {fraction:.3f} is below {self.metadata["minimum_gene_fraction"]}; check gene IDs/assay')
         if not present.all(): warnings.warn(f'{sum(~present)} student genes absent; zero-filled, coverage={fraction:.3f}',UserWarning,stacklevel=2)
-        log=normalize_counts(x).astype(np.float32)
+        log=_features(data,x)
         selected=np.zeros((data.n_obs,len(ix)),dtype=np.float32)
         selected[:,present]=log[:,ix[present]].toarray()
         return (selected@self.components.T-self.input_mean)/self.input_scale
@@ -207,8 +216,13 @@ class StudentEncoder:
         if not np.isfinite(values).all(): raise ValueError('Nonfinite student predictions')
         out=pd.DataFrame(values,index=data.obs_names,columns=[f'embedding_{i}' for i in range(values.shape[1])])
         out.attrs['bremap_encoder_metadata']={'model':'custom','checkpoint':self.fingerprint(),
-            'preprocessing':'distilled counts; '+self.metadata['gene_case'], 'teacher':self.metadata['teacher']}
+            'preprocessing':self._preprocessing(), 'teacher':self.metadata['teacher']}
         return out
+
+    def _preprocessing(self):
+        if 'expression_contract' in self.metadata:
+            return 'student provided expression; '+json.dumps(self.metadata['expression_contract'],sort_keys=True)+'; '+self.metadata['gene_case']
+        return 'student CP10k/log1p; '+self.metadata['gene_case']
 
     def _arrays(self):
         return dict(genes=self.genes,components=self.components,input_mean=self.input_mean,
@@ -222,7 +236,7 @@ class StudentEncoder:
         if key in data.obsm: raise ValueError(f'obsm[{key!r}] already exists; choose a new key')
         vectors=self.transform(data)
         return attach_embeddings(data,vectors.rename_axis('cell_id').reset_index(),key=key,
-            model='custom',checkpoint=self.fingerprint(),preprocessing='student CP10k/log1p; '+self.metadata['gene_case'])
+            model='custom',checkpoint=self.fingerprint(),preprocessing=self._preprocessing())
 
     def fingerprint(self):
         h=hashlib.sha256()

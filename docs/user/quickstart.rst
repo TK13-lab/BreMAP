@@ -9,7 +9,7 @@ no pandas conversion loop, research script or R installation is needed.
 Install and start
 ------------------------------
 
-This tutorial requires BReMAP **0.7.0**, including its optional plotting
+This tutorial requires BReMAP **0.8.0**, including its optional plotting
 dependencies. From a cloned checkout of the release:
 
 .. code-block:: console
@@ -227,3 +227,10 @@ foundation-model embeddings.
 Continue with :doc:`own-data`, :doc:`outputs` and :doc:`cases`. The complete
 :download:`tutorial source <examples/tutorial.py>` is available for convenience;
 every step above uses the same installed public API.
+
+Using a downloaded processed object
+------------------------------------
+
+The example above uses counts. For normalized-only H5AD or Seurat/SCE RDS,
+see :doc:`processed-inputs`: inspect the object, select its matrix, declare the
+processing and continue with the same partition/run/plot APIs.

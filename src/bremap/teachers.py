@@ -15,6 +15,14 @@ import pandas as pd
 
 from .preprocessing import file_hash
 from .student import _counts, _digest
+from .expression import get_declaration, values as expression_values
+
+
+def _validate_teacher_input(data):
+    if get_declaration(data)['type']=='preprocessed':
+        raise ValueError('Teacher extraction cannot use arbitrary preprocessed/residual/integrated values. '
+                         'Select counts or declared library-normalized/log1p expression, or supply compatible embeddings.')
+    _counts(data,'exact')
 
 
 class TeacherEncoder:
@@ -50,7 +58,7 @@ class TeacherEncoder:
         self._bundle_identity=None
 
     @classmethod
-    def from_pretrained(cls, checkpoint_id, *, cache_dir=None, confirm=None, **kwargs):
+    def from_pretrained(cls, checkpoint_id, *, cache_dir=None, confirm=None, data=None, **kwargs):
         """Select/download an official checkpoint, then construct a teacher.
 
         See :func:`bremap.list_checkpoints` for IDs. Confirmation and verified
@@ -60,6 +68,8 @@ class TeacherEncoder:
         Upstream inference libraries still need to be installed separately.
         """
         from .checkpoints import _select, download_checkpoint
+        if data is not None:
+            _validate_teacher_input(data)
         if checkpoint_id is None:
             raise ValueError('from_pretrained requires a checkpoint_id; use list_checkpoints()')
         entry = _select(checkpoint_id)
@@ -111,7 +121,7 @@ class TeacherEncoder:
 
     def transform(self,data,*,cache_dir):
         """Return cell-indexed DataFrame; completed chunks survive interruptions."""
-        _counts(data,'exact')
+        _validate_teacher_input(data)
         col=self.options['gene_column']
         genes=data.var_names if col is None else data.var[col] if col in data.var else None
         if genes is None: raise ValueError(f'gene_column {col!r} is missing from data.var')
@@ -123,6 +133,7 @@ class TeacherEncoder:
         if self._bundle_identity!=identity:
             self._bundle=None; self._bundle_identity=identity
         record={'input_sha256':_digest(data),'gene_identifiers':list(map(str,genes)),
+                'expression':get_declaration(data),
                 'options':self.options,**model_manifest}
         stamp=hashlib.sha256(json.dumps(record,sort_keys=True).encode()).hexdigest()
         folder=Path(cache_dir);folder.mkdir(parents=True,exist_ok=True); manifest=folder/'manifest.json'
@@ -143,7 +154,10 @@ class TeacherEncoder:
                 except Exception as e: raise ValueError(f'Invalid teacher cache chunk {path}; remove only this corrupted chunk to recompute') from e
             else:
                 begin=time.perf_counter()
-                values=np.asarray(self._encode_chunk(data[start:start+step].copy(),self.options['seed']+start),dtype=np.float32)
+                chunk=data[start:start+step].copy()
+                if get_declaration(data)['type']!='counts':
+                    chunk.X=expression_values(chunk)
+                values=np.asarray(self._encode_chunk(chunk,self.options['seed']+start),dtype=np.float32)
                 self._validate(values,len(ids))
                 temp=path.with_suffix('.tmp')
                 with temp.open('wb') as f:
@@ -204,13 +218,16 @@ class TeacherEncoder:
                 if token not in vocab: vocab.append_token(token)
             vocab.set_default_index(vocab['<pad>'])
             cfg=json.loads((self.checkpoint/'args.json').read_text())
-            model=TransformerModel(ntoken=len(vocab),d_model=cfg['embsize'],nhead=cfg['nheads'],
-                d_hid=cfg['d_hid'],nlayers=cfg['nlayers'],nlayers_cls=cfg['n_layers_cls'],n_cls=1,
-                vocab=vocab,dropout=cfg['dropout'],pad_token=cfg['pad_token'],pad_value=cfg['pad_value'],
-                do_mvc=True,do_dab=False,use_batch_labels=False,domain_spec_batchnorm=False,
-                explicit_zero_prob=False,use_fast_transformer=False,pre_norm=False)
-            load_pretrained(model,torch.load(self.checkpoint/'best_model.pt',map_location='cpu',weights_only=True),verbose=False)
-            model.to(self.device);model.eval();self._bundle=(vocab,cfg,model)
+            # Loading weights must not consume the seeded stream used by upstream
+            # DataLoader workers for binning/subsampling on the first chunk.
+            with torch.random.fork_rng(devices=[]):
+                model=TransformerModel(ntoken=len(vocab),d_model=cfg['embsize'],nhead=cfg['nheads'],
+                    d_hid=cfg['d_hid'],nlayers=cfg['nlayers'],nlayers_cls=cfg['n_layers_cls'],n_cls=1,
+                    vocab=vocab,dropout=cfg['dropout'],pad_token=cfg['pad_token'],pad_value=cfg['pad_value'],
+                    do_mvc=True,do_dab=False,use_batch_labels=False,domain_spec_batchnorm=False,
+                    explicit_zero_prob=False,use_fast_transformer=False,pre_norm=False)
+                load_pretrained(model,torch.load(self.checkpoint/'best_model.pt',map_location='cpu',weights_only=True),verbose=False)
+                model.to(self.device);model.eval();self._bundle=(vocab,cfg,model)
         vocab,cfg,model=self._bundle
         col=self.options['gene_column']; genes=list(map(str,data.var_names if col is None else data.var[col]))
         if self.options['gene_case']=='insensitive':

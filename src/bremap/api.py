@@ -15,6 +15,7 @@ from .calibration import load_policy, select_settings
 from .core import _identifiers
 from .preprocessing import file_hash
 from .specification import ReferenceSpec
+from .expression import CANONICAL
 
 
 @dataclass(frozen=True)
@@ -135,6 +136,8 @@ def load_reference(model):
             meta['donor_column'] != spec.data['donor_column'] or meta['label_column'] != spec.data['label_column'] or
             meta['representation']['kind'] != spec.data['representation']['kind']):
         raise ValueError('Model metadata does not match the specification')
+    if meta.get('expression_contract', {'normalization': CANONICAL}) != spec.data.get('expression_contract', {'normalization': CANONICAL}):
+        raise ValueError('Model expression processing does not match specification')
     _number(meta['beta'], 'beta', high=1)
     _number(meta['temperature'], 'temperature', positive=True)
     _validate_policy_settings({'beta': meta['beta'], 'temperature': meta['temperature'], **meta['transport']},

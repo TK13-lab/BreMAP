@@ -15,7 +15,8 @@ from sklearn.preprocessing import StandardScaler
 from . import __version__
 from .core import ReferenceMapper, _identifiers, _matrix
 from .transport import transport_predict
-from .preprocessing import file_hash, fit_raw_svd, normalize_counts, program_scores
+from .preprocessing import file_hash, fit_raw_svd, program_scores
+from .expression import features, effective_contract, check_contract, zero_rows, CANONICAL, validate_contract
 
 SCHEMA = "bremap-model-v1"
 
@@ -58,7 +59,7 @@ def _program_config(path):
             "heldout_validation": heldout, "minimum_genes_per_anchor": minimum}
 
 
-def _read_input(path, donor_column, label_column=None, genes=None):
+def _read_input(path, donor_column, label_column=None, genes=None, expression_contract=None):
     data = ad.read_h5ad(path)
     if not data.n_obs or not data.n_vars:
         raise ValueError("H5AD input must contain cells and genes")
@@ -74,20 +75,17 @@ def _read_input(path, donor_column, label_column=None, genes=None):
         if label_column not in data.obs:
             raise ValueError(f"Missing label column: {label_column}")
         labels = _identifiers(data.obs[label_column], "labels", data.n_obs)
-    counts = sparse.csr_matrix(data.X, dtype=float)
-    # Validate the complete matrix, including extra genes, before alignment.
-    if (not np.isfinite(counts.data).all() or (counts.data < 0).any()
-            or not np.allclose(counts.data, np.rint(counts.data), rtol=0, atol=1e-5)):
-        raise ValueError("H5AD X must contain finite nonnegative raw integer counts")
+    if expression_contract is not None:
+        check_contract(data, expression_contract)
+    positions = None
     if genes is not None:
         positions = pd.Index(gene_ids).get_indexer(genes)
         if (positions < 0).any():
             raise ValueError(f"Missing {int((positions < 0).sum())} reference genes")
-        counts = counts[:, positions]
         gene_ids = np.asarray(genes)
-    counts.sort_indices()
-    zero = np.asarray(counts.sum(axis=1)).ravel() == 0
-    return data, normalize_counts(counts), gene_ids, cell_ids, donors, labels, zero
+    logcounts = features(data, positions)
+    zero = zero_rows(logcounts)
+    return data, logcounts, gene_ids, cell_ids, donors, labels, zero
 
 
 def _embedding(data, key):
@@ -121,8 +119,9 @@ def fit_reference(args):
                                       max(logcounts.shape) * np.finfo(float).eps)
         arrays["svd_components"] = svd.components_[keep]
         X = np.asarray(logcounts @ arrays["svd_components"].T)
-        representation = {"kind": "raw_svd", "dimensions": X.shape[1],
-                          "normalization": "CP10k_log1p_on_reference_gene_universe", "seed": 42}
+        contract = effective_contract(data)
+        representation = {"kind": "provided_svd" if contract['normalization']=='provided_expression' else "raw_svd", "dimensions": X.shape[1],
+                          "normalization": contract['normalization'], "seed": 42}
     mapper = ReferenceMapper(beta=.25, temperature=.1).fit(X, programs, labels, donors)
     for name in ("embedding", "program"):
         scaler = getattr(mapper, name + "_scaler_")
@@ -136,7 +135,7 @@ def fit_reference(args):
         "genes": genes.tolist(), "classes": mapper.classes_.tolist(),
         "reference_donors": sorted(set(donors)), "label_column": args.label_column,
         "donor_column": args.donor_column, "programs": config, "anchor_coverage": coverage,
-        "representation": representation, "beta": mapper.beta, "temperature": mapper.temperature,
+        "representation": representation, "expression_contract": effective_contract(data), "beta": mapper.beta, "temperature": mapper.temperature,
         "transport": {"entropy": .1, "marginal_penalty": .2, "reject_prior": .1},
         "arrays_sha256": file_hash(out / "arrays.npz"),
         "reference_sha256": file_hash(args.reference), "programs_sha256": file_hash(args.programs),
@@ -149,6 +148,7 @@ def _load_model(path):
     meta = json.loads((path / "model.json").read_text())
     if meta.get("schema") != SCHEMA or meta.get("method") not in ("affinity", "transport"):
         raise ValueError("Unsupported model schema or method")
+    validate_contract(meta.get('expression_contract', {'normalization': CANONICAL}))
     if file_hash(path / "arrays.npz") != meta.get("arrays_sha256"):
         raise ValueError("Model array checksum mismatch")
     with np.load(path / "arrays.npz", allow_pickle=False) as archive:
@@ -176,7 +176,7 @@ def _load_model(path):
         if arrays[name].shape != (len(mapper.classes_), size):
             raise ValueError("Malformed model prototype dimensions")
         setattr(mapper, name + "_", arrays[name])
-    if meta["representation"]["kind"] == "raw_svd":
+    if meta["representation"]["kind"] in ("raw_svd", "provided_svd"):
         if arrays["svd_components"].shape != (dimensions["embedding"], len(meta["genes"])):
             raise ValueError("Malformed model SVD dimensions")
     elif meta["representation"]["kind"] != "frozen_embedding":
@@ -186,10 +186,11 @@ def _load_model(path):
 
 def _transform(path, meta, arrays, require_labels=False):
     data, logcounts, genes, ids, donors, labels, zero = _read_input(
-        path, meta["donor_column"], meta["label_column"] if require_labels else None, meta["genes"])
+        path, meta["donor_column"], meta["label_column"] if require_labels else None, meta["genes"],
+        meta.get('expression_contract', {'normalization': CANONICAL}))
     programs, _ = program_scores(logcounts, genes, meta["programs"])
     representation = meta["representation"]
-    if representation["kind"] == "raw_svd":
+    if representation["kind"] in ("raw_svd", "provided_svd"):
         X = np.asarray(logcounts @ arrays["svd_components"].T)
     else:
         X, provenance = _embedding(data, representation["key"])
